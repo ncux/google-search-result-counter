@@ -1,16 +1,16 @@
 package gsearchparser;
+
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import javax.swing.JFileChooser;
 
@@ -21,14 +21,11 @@ import jxl.write.WritableSheet;
 import jxl.write.WritableWorkbook;
 import jxl.write.WriteException;
 
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-
 public class ParserModel {
-	private List<String> keywordsList = new ArrayList<String>();
-	private Map<String, Integer> resultMap = new LinkedHashMap<String, Integer>();
+
+	private GoogleResultCounterParser googleParser = null;
+	private List<String> keywordsList = new Vector<String>();
+	private Map<String, Long> resultMap = new LinkedHashMap<String, Long>();
 	private ParserDialog view = null;
 
 	public ParserModel() {
@@ -47,6 +44,7 @@ public class ParserModel {
 			File file = fc.getSelectedFile();
 			view.setSourceFilePath(file.getAbsolutePath());
 			parseTxtFile(file);
+
 		}
 	}
 
@@ -59,12 +57,13 @@ public class ParserModel {
 					"windows-1251"));
 			String strLine;
 			while ((strLine = br.readLine()) != null) {
-				if (strLine.equals("")) {
+				if (strLine.isEmpty()) {
 					continue;
 				}
-
 				keywordsList.add(strLine);
 			}
+			view.setKeywordsToTable(keywordsList);
+
 			in.close();
 		} catch (Exception e) {
 			System.err.println("Error: " + e.getMessage());
@@ -72,34 +71,10 @@ public class ParserModel {
 	}
 
 	public void startParsing() {
-		Iterator<String> it = keywordsList.iterator();
-
-		while (it.hasNext()) {
-			String keyword = it.next();
-			String keywordForWeb = StringEscapeUtils.escapeHtml4(keyword);
-
-			try {
-				keywordForWeb = URLEncoder.encode(keywordForWeb, "UTF-8");
-				Document doc = Jsoup
-						.connect(
-								"http://www.google.ru/search?q="
-										+ keywordForWeb
-										+ "&hl=en&ie=UTF-8&oe=UTF8")
-						.userAgent(
-								"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)")
-						.get();
-				Element el = doc.getElementById("resultStats");
-				if (el != null) {
-					String value = el.ownText();
-					Integer number = parseResultString(value);
-					resultMap.put(keyword, number);
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-		}
-
+		googleParser = new GoogleResultCounterParser();
+		googleParser.setKeywords(keywordsList);
+		googleParser.setParserModel(this);
+		googleParser.start();
 	}
 
 	public void exportToXls() {
@@ -131,11 +106,19 @@ public class ParserModel {
 		}
 	}
 
-	public Integer parseResultString(String value) {
-		String strWithoutEscapes = StringEscapeUtils.unescapeHtml4(value);
-		strWithoutEscapes = strWithoutEscapes.replaceAll("\\D+", "");
-
-		Integer resultNumber = Integer.valueOf(strWithoutEscapes);
-		return resultNumber;
+	public void addToResultMap(String keyword, Long number) {
+		resultMap.put(keyword, number);
+		view.setTableResult(keyword, number);
 	}
+
+	public void stopParsing() {
+		if (googleParser != null) {
+			googleParser.setStop(true);
+		}
+	}
+
+	public void setIsPerforming(boolean isPerforming) {
+		view.setIsPerforming(isPerforming);
+	}
+
 }
