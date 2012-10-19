@@ -3,33 +3,45 @@ package gsearchparser;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-public class GoogleResultCounterParser extends Thread {
+public class GoogleResultCounterParser extends Thread
+{
 
-	private List<String> keywordsList = null;
+	private Set<String> keywordsList = null;
 	private ParserModel parserModel = null;
+	private Map<String, Long> resultMap = null;
 	private boolean isStop = false;
 
 	@Override
-	public void run() {
+	public void run()
+	{
 		parserModel.setIsPerforming(true);
 		Iterator<String> it = keywordsList.iterator();
 
-		while (it.hasNext()) {
-			if (isStop) {
+		while (it.hasNext())
+		{
+			if (isStop)
+			{
 				return;
 			}
 
 			String keyword = it.next();
+			if (resultMap.keySet().contains(keyword))
+			{
+				continue;
+			}
+
 			String keywordForWeb = StringEscapeUtils.escapeHtml4(keyword);
 
-			try {
+			try
+			{
 				keywordForWeb = URLEncoder.encode(keywordForWeb, "UTF-8");
 				Document doc = Jsoup
 						.connect(
@@ -40,41 +52,54 @@ public class GoogleResultCounterParser extends Thread {
 								"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)")
 						.get();
 				Element el = doc.getElementById("resultStats");
-				if (el != null) {
+				if (el != null)
+				{
 					String value = el.ownText();
 					Long number = parseResultString(value);
 					parserModel.addToResultMap(keyword, number);
 				}
-			} catch (IOException e) {
+			} catch (IOException e)
+			{
 				e.printStackTrace();
 			}
 		}
 		parserModel.setIsPerforming(false);
 	}
 
-	private Long parseResultString(String value) {
+	private Long parseResultString(String value)
+	{
 		String strWithoutEscapes = StringEscapeUtils.unescapeHtml4(value);
 		strWithoutEscapes = strWithoutEscapes.replaceAll("\\D+", "");
 
 		Long resultNumber = null;
-		try {
+		try
+		{
 			resultNumber = Long.valueOf(strWithoutEscapes);
-		} catch (NumberFormatException exc) {
+		} catch (NumberFormatException exc)
+		{
 
 		}
 
 		return resultNumber;
 	}
 
-	public void setKeywords(List<String> keywordsList) {
+	public void setKeywords(Set<String> keywordsList)
+	{
 		this.keywordsList = keywordsList;
 	}
 
-	public void setParserModel(ParserModel parserModel) {
+	public void setParserModel(ParserModel parserModel)
+	{
 		this.parserModel = parserModel;
 	}
 
-	public void setStop(boolean isStop) {
+	public void setStop(boolean isStop)
+	{
 		this.isStop = isStop;
+	}
+
+	public void setResultMap(Map<String, Long> resultMap)
+	{
+		this.resultMap = resultMap;
 	}
 }
