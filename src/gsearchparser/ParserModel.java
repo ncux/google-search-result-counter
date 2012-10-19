@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Vector;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -27,6 +28,7 @@ public class ParserModel
 {
 	private List<GoogleResultCounterParser> googleParserList = null;
 	private List<String> keywordsList = new ArrayList<String>();
+	private List<Boolean> keywordsListProcessed = new Vector<Boolean>();
 	private Map<String, Long> resultMap = new LinkedHashMap<String, Long>();
 	private ParserDialog view = null;
 	private int threadNumber = 0;
@@ -101,6 +103,11 @@ public class ParserModel
 
 		googleParserList = new ArrayList<GoogleResultCounterParser>(
 				threadNumber);
+		keywordsListProcessed = new Vector<Boolean>(keywordsList.size());
+		for (int i = 0; i < keywordsList.size(); i++)
+		{
+			keywordsListProcessed.add(Boolean.FALSE);
+		}
 		for (int i = 0; i < threadNumber; i++)
 		{
 			List<String> keywordListForParser = null;
@@ -111,11 +118,13 @@ public class ParserModel
 						+ keywordsNumberForEach);
 			} else
 			{
+				// last thread analyze all keywords in the end
 				keywordListForParser = keywordsList.subList(i
 						* keywordsNumberForEach, keywordsList.size());
 			}
 			GoogleResultCounterParser googleParser = new GoogleResultCounterParser();
-			googleParser.setKeywords(keywordListForParser);
+			googleParser.setKeywords(keywordsList);
+			googleParser.setKeywordsProcessed(keywordsListProcessed);
 			googleParser.setParserModel(this);
 			googleParser.setResultMap(resultMap);
 			googleParser.start();

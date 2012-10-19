@@ -23,6 +23,7 @@ public class GoogleResultCounterParser extends Thread
 	private ParserModel parserModel = null;
 	private Map<String, Long> resultMap = null;
 	private boolean isStop = false;
+	private List<Boolean> keywordsListProcessed = null;
 
 	@Override
 	public void run()
@@ -41,9 +42,10 @@ public class GoogleResultCounterParser extends Thread
 			{
 				continue;
 			}
-
+			
+			
+			model.markAsProcessing(keyword);
 			String keywordForWeb = StringEscapeUtils.escapeHtml4(keyword);
-
 			try
 			{
 				keywordForWeb = URLEncoder.encode(keywordForWeb, "UTF-8");
@@ -105,5 +107,10 @@ public class GoogleResultCounterParser extends Thread
 	public void setResultMap(Map<String, Long> resultMap)
 	{
 		this.resultMap = resultMap;
+	}
+
+	public void setKeywordsProcessed(List<Boolean> keywordsListProcessed)
+	{
+		this.keywordsListProcessed = keywordsListProcessed;
 	}
 }
