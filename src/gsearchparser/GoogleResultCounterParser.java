@@ -3,37 +3,42 @@ package gsearchparser;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+/**
+ * 
+ * 
+ * @author SHaurushkin
+ */
 public class GoogleResultCounterParser extends Thread
 {
 
-	private Set<String> keywordsList = null;
+	private List<String> keywordsList = null;
 	private ParserModel parserModel = null;
 	private Map<String, Long> resultMap = null;
 	private boolean isStop = false;
+	private int id;
 
 	@Override
 	public void run()
 	{
-		parserModel.setIsPerforming(true);
 		Iterator<String> it = keywordsList.iterator();
-
 		while (it.hasNext())
 		{
+			String keyword = it.next();
 			if (isStop)
 			{
+				parserModel.setFinished(true);
 				return;
 			}
 
-			String keyword = it.next();
-			if (resultMap.keySet().contains(keyword))
+			if (resultMap.get(keyword) != null)
 			{
 				continue;
 			}
@@ -63,7 +68,7 @@ public class GoogleResultCounterParser extends Thread
 				e.printStackTrace();
 			}
 		}
-		parserModel.setIsPerforming(false);
+		parserModel.setFinished(true);
 	}
 
 	private Long parseResultString(String value)
@@ -83,7 +88,7 @@ public class GoogleResultCounterParser extends Thread
 		return resultNumber;
 	}
 
-	public void setKeywords(Set<String> keywordsList)
+	public void setKeywords(List<String> keywordsList)
 	{
 		this.keywordsList = keywordsList;
 	}
@@ -101,5 +106,10 @@ public class GoogleResultCounterParser extends Thread
 	public void setResultMap(Map<String, Long> resultMap)
 	{
 		this.resultMap = resultMap;
+	}
+
+	public void setId(int i)
+	{
+		id = i;
 	}
 }

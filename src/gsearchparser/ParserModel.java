@@ -4,36 +4,33 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.Set;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
-import jxl.Workbook;
-import jxl.write.Label;
-import jxl.write.Number;
-import jxl.write.WritableSheet;
-import jxl.write.WritableWorkbook;
-import jxl.write.WriteException;
-
 import org.apache.commons.io.FilenameUtils;
 
+/**
+ * Model for managing view
+ * 
+ * @author SHaurushkin
+ */
 public class ParserModel
 {
-
-	private GoogleResultCounterParser googleParser = null;
-	private Set<String> keywordsList = new LinkedHashSet<String>();
+	private List<GoogleResultCounterParser> googleParserList = null;
+	private List<String> keywordsList = new ArrayList<String>();
 	private Map<String, Long> resultMap = new LinkedHashMap<String, Long>();
 	private ParserDialog view = null;
+	private int threadNumber = 0;
+	private int countOfFinished = 0;
 
 	public ParserModel()
 	{
@@ -55,7 +52,6 @@ public class ParserModel
 			File file = fc.getSelectedFile();
 			view.setSourceFilePath(file.getAbsolutePath());
 			parseTxtFile(file);
-
 		}
 	}
 
@@ -76,9 +72,9 @@ public class ParserModel
 					continue;
 				}
 				keywordsList.add(strLine);
+				resultMap.put(strLine, null);
 			}
 			view.setKeywordsToTable(keywordsList);
-
 			in.close();
 		} catch (Exception e)
 		{
@@ -88,27 +84,68 @@ public class ParserModel
 
 	public void startParsing()
 	{
-		googleParser = new GoogleResultCounterParser();
-		googleParser.setKeywords(keywordsList);
-		googleParser.setParserModel(this);
-		googleParser.setResultMap(resultMap);
-		googleParser.start();
+		threadNumber = view.getThreadNumber();
+		if (threadNumber == 0 || keywordsList.size() == 0)
+		{
+			return;
+		}
+
+		setIsPerforming(true);
+		countOfFinished = 0;
+		int keywordsNumberForEach = keywordsList.size() / threadNumber;
+		if (keywordsNumberForEach == 0)
+		{
+			keywordsNumberForEach = 1;
+			threadNumber = keywordsList.size();
+		}
+
+		googleParserList = new ArrayList<GoogleResultCounterParser>(
+				threadNumber);
+		for (int i = 0; i < threadNumber; i++)
+		{
+			List<String> keywordListForParser = null;
+			if (i < threadNumber - 1)
+			{
+				keywordListForParser = keywordsList.subList(i
+						* keywordsNumberForEach, i * keywordsNumberForEach
+						+ keywordsNumberForEach);
+			} else
+			{
+				keywordListForParser = keywordsList.subList(i
+						* keywordsNumberForEach, keywordsList.size());
+			}
+			GoogleResultCounterParser googleParser = new GoogleResultCounterParser();
+			googleParser.setKeywords(keywordsList);
+			googleParser.setId(i);
+			googleParser.setParserModel(this);
+			googleParser.setResultMap(resultMap);
+			googleParser.start();
+			googleParserList.add(googleParser);
+		}
 	}
 
 	public void exportToXls()
 	{
 		if (resultMap.size() == 0)
 		{
-			ResourceBundle loc_data = ResourceBundle.getBundle(
-					"resources.loc_data", ParserDialog.LOCALE_RU);
-
-			JOptionPane.showMessageDialog(view,
-					loc_data.getString("warn_no_data"),
-					loc_data.getString("title"),
-					JOptionPane.INFORMATION_MESSAGE);
+			showWarningEmptyData();
 			return;
 		}
+		File file = chooseFileToSave();
+		if (file != null)
+		{
+			ExcelExportCreator excelCreator = new ExcelExportCreator(file,
+					resultMap);
+			excelCreator.create();
+		}
+	}
 
+	/**
+	 * Choose file to save
+	 * @return
+	 */
+	private File chooseFileToSave()
+	{
 		final JFileChooser fc = new JFileChooser();
 		// fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		fc.addChoosableFileFilter(new FileFilter()
@@ -142,39 +179,36 @@ public class ParserModel
 		if (returnVal == JFileChooser.APPROVE_OPTION)
 		{
 			File file = fc.getSelectedFile();
-			try
+			if (!file.getName().toLowerCase().endsWith(".xls"))
 			{
-				// create xls
-				WritableWorkbook workbook;
-				workbook = Workbook.createWorkbook(file);
-				WritableSheet sheet = workbook.createSheet("First Sheet", 0);
-
-				// for each keyword request google
-				Iterator<String> iterator = resultMap.keySet().iterator();
-				while (iterator.hasNext())
-				{
-					String keyword = iterator.next();
-					int row = 0;
-					Label label = new Label(0, row, keyword);
-					sheet.addCell(label);
-					Number number = new Number(1, row, resultMap.get(keyword));
-					sheet.addCell(number);
-				}
-
-				// save xls
-				workbook.write();
-				workbook.close();
-			} catch (IOException e)
-			{
-				e.printStackTrace();
-			} catch (WriteException e)
-			{
-				e.printStackTrace();
+				file = new File(file.getAbsolutePath() + ".xls");
 			}
+			return file;
 		}
+
+		return null;
 	}
 
-	public void addToResultMap(final String keyword, final Long number)
+	/**
+	 * Open warning window
+	 */
+	private void showWarningEmptyData()
+	{
+		ResourceBundle loc_data = ResourceBundle.getBundle(
+				"resources.loc_data", ParserDialog.LOCALE_RU);
+
+		JOptionPane.showMessageDialog(view, loc_data.getString("warn_no_data"),
+				loc_data.getString("title"), JOptionPane.INFORMATION_MESSAGE);
+	}
+
+	/**
+	 * Add to result map and update table data
+	 * 
+	 * @param keyword
+	 * @param number
+	 */
+	public synchronized void addToResultMap(final String keyword,
+			final Long number)
 	{
 		resultMap.put(keyword, number);
 		SwingUtilities.invokeLater(new Runnable()
@@ -187,11 +221,17 @@ public class ParserModel
 		});
 	}
 
+	/**
+	 * stop parsing
+	 */
 	public void stopParsing()
 	{
-		if (googleParser != null)
+		for (GoogleResultCounterParser parser : googleParserList)
 		{
-			googleParser.setStop(true);
+			if (parser != null)
+			{
+				parser.setStop(true);
+			}
 		}
 	}
 
@@ -205,6 +245,15 @@ public class ParserModel
 				view.setIsPerforming(isPerforming);
 			}
 		});
+	}
+
+	public synchronized void setFinished(final boolean isPerforming)
+	{
+		countOfFinished++;
+		if (countOfFinished == threadNumber)
+		{
+			setIsPerforming(false);
+		}
 	}
 
 	public void clearList()
