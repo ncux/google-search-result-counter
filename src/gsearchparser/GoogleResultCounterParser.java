@@ -23,7 +23,6 @@ public class GoogleResultCounterParser extends Thread
 	private ParserModel parserModel = null;
 	private Map<String, Long> resultMap = null;
 	private boolean isStop = false;
-	private int id;
 
 	@Override
 	public void run()
@@ -31,13 +30,13 @@ public class GoogleResultCounterParser extends Thread
 		Iterator<String> it = keywordsList.iterator();
 		while (it.hasNext())
 		{
-			String keyword = it.next();
 			if (isStop)
 			{
 				parserModel.setFinished(true);
 				return;
 			}
 
+			String keyword = it.next();
 			if (resultMap.get(keyword) != null)
 			{
 				continue;
@@ -106,10 +105,5 @@ public class GoogleResultCounterParser extends Thread
 	public void setResultMap(Map<String, Long> resultMap)
 	{
 		this.resultMap = resultMap;
-	}
-
-	public void setId(int i)
-	{
-		id = i;
 	}
 }

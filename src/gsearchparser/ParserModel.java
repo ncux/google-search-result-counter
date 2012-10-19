@@ -115,8 +115,7 @@ public class ParserModel
 						* keywordsNumberForEach, keywordsList.size());
 			}
 			GoogleResultCounterParser googleParser = new GoogleResultCounterParser();
-			googleParser.setKeywords(keywordsList);
-			googleParser.setId(i);
+			googleParser.setKeywords(keywordListForParser);
 			googleParser.setParserModel(this);
 			googleParser.setResultMap(resultMap);
 			googleParser.start();
