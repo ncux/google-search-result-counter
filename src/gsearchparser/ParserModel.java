@@ -64,8 +64,8 @@ public class ParserModel
 			keywordsList.clear();
 			FileInputStream fstream = new FileInputStream(txtFile);
 			DataInputStream in = new DataInputStream(fstream);
-			BufferedReader br = new BufferedReader(new InputStreamReader(in,
-					"windows-1251"));
+			// TODO check for other encodings
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));
 			String strLine;
 			while ((strLine = br.readLine()) != null)
 			{
@@ -124,7 +124,6 @@ public class ParserModel
 			}
 			GoogleResultCounterParser googleParser = new GoogleResultCounterParser();
 			googleParser.setKeywords(keywordsList);
-			googleParser.setKeywordsProcessed(keywordsListProcessed);
 			googleParser.setParserModel(this);
 			googleParser.setResultMap(resultMap);
 			googleParser.start();
@@ -142,14 +141,15 @@ public class ParserModel
 		File file = chooseFileToSave();
 		if (file != null)
 		{
-			ExcelExportCreator excelCreator = new ExcelExportCreator(file,
-					resultMap);
-			excelCreator.create();
+			// ExcelExportCreator excelCreator = new ExcelExportCreator(file,
+			// resultMap);
+			// excelCreator.create();
 		}
 	}
 
 	/**
 	 * Choose file to save
+	 * 
 	 * @return
 	 */
 	private File chooseFileToSave()
@@ -269,5 +269,17 @@ public class ParserModel
 		keywordsList.clear();
 		resultMap.clear();
 		view.clearTable();
+	}
+
+	synchronized public boolean markAsProcessing(int i)
+	{
+		if (keywordsListProcessed.get(i).equals(Boolean.TRUE))
+		{
+			return false;
+		} else
+		{
+			keywordsListProcessed.set(i, Boolean.TRUE);
+			return true;
+		}
 	}
 }

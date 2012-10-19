@@ -23,13 +23,11 @@ public class GoogleResultCounterParser extends Thread
 	private ParserModel parserModel = null;
 	private Map<String, Long> resultMap = null;
 	private boolean isStop = false;
-	private List<Boolean> keywordsListProcessed = null;
 
 	@Override
 	public void run()
 	{
-		Iterator<String> it = keywordsList.iterator();
-		while (it.hasNext())
+		for (int i = 0; i < keywordsList.size(); i++)
 		{
 			if (isStop)
 			{
@@ -37,14 +35,16 @@ public class GoogleResultCounterParser extends Thread
 				return;
 			}
 
-			String keyword = it.next();
+			String keyword = keywordsList.get(i);
 			if (resultMap.get(keyword) != null)
 			{
 				continue;
 			}
-			
-			
-			model.markAsProcessing(keyword);
+
+			 if (!parserModel.markAsProcessing(i))
+			 {
+			 continue;
+			 }
 			String keywordForWeb = StringEscapeUtils.escapeHtml4(keyword);
 			try
 			{
@@ -61,7 +61,14 @@ public class GoogleResultCounterParser extends Thread
 				if (el != null)
 				{
 					String value = el.ownText();
-					Long number = parseResultString(value);
+					Long number = null;
+					if (!value.isEmpty())
+					{
+						number = parseResultString(value);
+					} else
+					{
+						number = Long.valueOf("0");
+					}
 					parserModel.addToResultMap(keyword, number);
 				}
 			} catch (IOException e)
@@ -107,10 +114,5 @@ public class GoogleResultCounterParser extends Thread
 	public void setResultMap(Map<String, Long> resultMap)
 	{
 		this.resultMap = resultMap;
-	}
-
-	public void setKeywordsProcessed(List<Boolean> keywordsListProcessed)
-	{
-		this.keywordsListProcessed = keywordsListProcessed;
 	}
 }
