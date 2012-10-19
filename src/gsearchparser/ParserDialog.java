@@ -19,37 +19,41 @@ import javax.swing.ListSelectionModel;
 import javax.swing.WindowConstants;
 import javax.swing.table.DefaultTableModel;
 
-public class ParserDialog extends JFrame {
-
-	/**
-	 * 
-	 */
+/**
+ * S
+ * 
+ * @author SHaurushkin
+ */
+public class ParserDialog extends JFrame
+{
 	private static final long serialVersionUID = 6959318357186149652L;
-
 	private static final String MLS_PATH = "Path: ";
+
 	private ParserModel parserModel = null;
+
 	private JPanel panel = null;
 	private JLabel sourceFilePathLabel = null;
 	private JTable table;
-
 	private JButton startButton;
-
 	private JButton stopButton;
+	private JButton chooseFileButton;
+	private JButton exportButton;
 
-	public ParserDialog(ParserModel model) {
+	public ParserDialog(ParserModel model)
+	{
 		super("Google count result parser");
 		parserModel = model;
 		initialize();
 		model.setView(this);
 	}
 
-	private void initialize() {
-		panel = new JPanel();
+	private void initialize()
+	{
 		int row = 0;
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints gbc = new GridBagConstraints();
 
-		JButton chooseFileButton = new JButton("Choose source");
+		chooseFileButton = new JButton("Choose source");
 		gbc.anchor = GridBagConstraints.WEST;
 		gbc.gridx = 0;
 		gbc.gridy = row++;
@@ -90,72 +94,93 @@ public class ParserDialog extends JFrame {
 		sp.setMinimumSize(sp.getPreferredSize());
 		gbl.setConstraints(sp, gbc);
 
-		JButton exportButton = new JButton("Export");
+		exportButton = new JButton("Export");
 		gbc.anchor = GridBagConstraints.EAST;
 		gbc.gridx = 1;
 		gbc.gridy = row;
 		gbl.setConstraints(exportButton, gbc);
 
+		panel = new JPanel();
 		panel.setLayout(gbl);
 		panel.add(chooseFileButton);
 		panel.add(exportButton);
 		panel.add(sp);
 		panel.add(buttonPanel);
 		panel.add(sourceFilePathLabel);
+
 		this.setContentPane(panel);
 		this.setLocation(new Point(350, 300));
 		this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-		chooseFileButton.addActionListener(new ActionListener() {
+		addListeners();
+	}
 
-			public void actionPerformed(ActionEvent e) {
+	private void addListeners()
+	{
+		chooseFileButton.addActionListener(new ActionListener()
+		{
+
+			public void actionPerformed(ActionEvent e)
+			{
 				parserModel.openChooseTxtFileDialog();
 			}
 		});
 
-		startButton.addActionListener(new ActionListener() {
+		startButton.addActionListener(new ActionListener()
+		{
 
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(ActionEvent e)
+			{
 				parserModel.startParsing();
 			}
 		});
 
-		stopButton.addActionListener(new ActionListener() {
+		stopButton.addActionListener(new ActionListener()
+		{
 
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(ActionEvent e)
+			{
 				parserModel.stopParsing();
 			}
 		});
 
-		exportButton.addActionListener(new ActionListener() {
+		exportButton.addActionListener(new ActionListener()
+		{
 
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(ActionEvent e)
+			{
 				parserModel.exportToXls();
 			}
 		});
-
 	}
 
-	public void setSourceFilePath(String path) {
+	public void setSourceFilePath(String path)
+	{
 		sourceFilePathLabel.setText(MLS_PATH + path);
 	}
 
-	public void setKeywordsToTable(List<String> keywordsList) {
+	public void setKeywordsToTable(List<String> keywordsList)
+	{
 		DefaultTableModel model = (DefaultTableModel) table.getModel();
 		model.getDataVector().clear();
 
-		for (String keyword : keywordsList) {
-			model.addRow(new String[] { keyword });
+		for (String keyword : keywordsList)
+		{
+			model.addRow(new String[]
+			{ keyword });
 		}
 	}
 
-	public void setTableResult(String keyword, Long number) {
+	public void setTableResult(String keyword, Long number)
+	{
 		DefaultTableModel model = (DefaultTableModel) table.getModel();
 		int row = 0;
 		Vector<Vector<Object>> dataVector = model.getDataVector();
-		for (Vector rowVector : dataVector) {
+		for (Vector rowVector : dataVector)
+		{
 			String firstColumn = (String) rowVector.get(0);
-			if (firstColumn.equals(keyword)) {
+			if (firstColumn.equals(keyword))
+			{
 				break;
 			}
 			row++;
@@ -163,7 +188,8 @@ public class ParserDialog extends JFrame {
 		model.setValueAt(number, row, 1);
 	}
 
-	public void setIsPerforming(boolean isPerformingParsing) {
+	public void setIsPerforming(boolean isPerformingParsing)
+	{
 		startButton.setEnabled(!isPerformingParsing);
 		stopButton.setEnabled(isPerformingParsing);
 
