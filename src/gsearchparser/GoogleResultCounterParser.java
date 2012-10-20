@@ -2,7 +2,6 @@ package gsearchparser;
 
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -41,10 +40,6 @@ public class GoogleResultCounterParser extends Thread
 				continue;
 			}
 
-			 if (!parserModel.markAsProcessing(i))
-			 {
-			 continue;
-			 }
 			String keywordForWeb = StringEscapeUtils.escapeHtml4(keyword);
 			try
 			{

@@ -10,7 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.Vector;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -28,7 +27,6 @@ public class ParserModel
 {
 	private List<GoogleResultCounterParser> googleParserList = null;
 	private List<String> keywordsList = new ArrayList<String>();
-	private List<Boolean> keywordsListProcessed = new Vector<Boolean>();
 	private Map<String, Long> resultMap = new LinkedHashMap<String, Long>();
 	private ParserDialog view = null;
 	private int threadNumber = 0;
@@ -103,27 +101,16 @@ public class ParserModel
 
 		googleParserList = new ArrayList<GoogleResultCounterParser>(
 				threadNumber);
-		keywordsListProcessed = new Vector<Boolean>(keywordsList.size());
-		for (int i = 0; i < keywordsList.size(); i++)
-		{
-			keywordsListProcessed.add(Boolean.FALSE);
-		}
 		for (int i = 0; i < threadNumber; i++)
 		{
-			List<String> keywordListForParser = null;
-			if (i < threadNumber - 1)
+			List<String> keywordListForParser = new ArrayList<String>();
+			for (int j = i; j < keywordsList.size(); j += threadNumber)
 			{
-				keywordListForParser = keywordsList.subList(i
-						* keywordsNumberForEach, i * keywordsNumberForEach
-						+ keywordsNumberForEach);
-			} else
-			{
-				// last thread analyze all keywords in the end
-				keywordListForParser = keywordsList.subList(i
-						* keywordsNumberForEach, keywordsList.size());
+				keywordListForParser.add(keywordsList.get(j));
 			}
+
 			GoogleResultCounterParser googleParser = new GoogleResultCounterParser();
-			googleParser.setKeywords(keywordsList);
+			googleParser.setKeywords(keywordListForParser);
 			googleParser.setParserModel(this);
 			googleParser.setResultMap(resultMap);
 			googleParser.start();
@@ -269,17 +256,5 @@ public class ParserModel
 		keywordsList.clear();
 		resultMap.clear();
 		view.clearTable();
-	}
-
-	synchronized public boolean markAsProcessing(int i)
-	{
-		if (keywordsListProcessed.get(i).equals(Boolean.TRUE))
-		{
-			return false;
-		} else
-		{
-			keywordsListProcessed.set(i, Boolean.TRUE);
-			return true;
-		}
 	}
 }
