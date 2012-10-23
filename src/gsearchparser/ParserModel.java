@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,17 +26,12 @@ import org.apache.commons.io.FilenameUtils;
  */
 public class ParserModel
 {
-	private List<GoogleResultCounterParser> googleParserList = null;
+	private Map<Thread, GoogleResultCounterParser> googleParserMap = null;
 	private List<String> keywordsList = new ArrayList<String>();
 	private Map<String, Long> resultMap = new LinkedHashMap<String, Long>();
 	private ParserDialog view = null;
 	private int threadNumber = 0;
 	private int countOfFinished = 0;
-
-	public ParserModel()
-	{
-
-	}
 
 	public void setView(ParserDialog parserDialog)
 	{
@@ -99,7 +95,7 @@ public class ParserModel
 			threadNumber = keywordsList.size();
 		}
 
-		googleParserList = new ArrayList<GoogleResultCounterParser>(
+		googleParserMap = new HashMap<Thread, GoogleResultCounterParser>(
 				threadNumber);
 		for (int i = 0; i < threadNumber; i++)
 		{
@@ -110,11 +106,12 @@ public class ParserModel
 			}
 
 			GoogleResultCounterParser googleParser = new GoogleResultCounterParser();
+			Thread thread = new Thread(googleParser);
 			googleParser.setKeywords(keywordListForParser);
 			googleParser.setParserModel(this);
 			googleParser.setResultMap(resultMap);
-			googleParser.start();
-			googleParserList.add(googleParser);
+			thread.start();
+			googleParserMap.put(thread, googleParser);
 		}
 	}
 
@@ -221,11 +218,11 @@ public class ParserModel
 	 */
 	public void stopParsing()
 	{
-		for (GoogleResultCounterParser parser : googleParserList)
+		for (Thread thread : googleParserMap.keySet())
 		{
-			if (parser != null)
+			if (thread != null && thread.isAlive())
 			{
-				parser.setStop(true);
+				googleParserMap.get(thread).setStop(true);
 			}
 		}
 	}
@@ -242,7 +239,7 @@ public class ParserModel
 		});
 	}
 
-	public synchronized void setFinished(final boolean isPerforming)
+	public synchronized void setThreadFinished()
 	{
 		countOfFinished++;
 		if (countOfFinished == threadNumber)

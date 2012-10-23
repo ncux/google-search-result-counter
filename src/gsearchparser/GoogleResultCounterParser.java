@@ -15,13 +15,13 @@ import org.jsoup.nodes.Element;
  * 
  * @author SHaurushkin
  */
-public class GoogleResultCounterParser extends Thread
+public class GoogleResultCounterParser implements Runnable
 {
 
 	private List<String> keywordsList = null;
 	private ParserModel parserModel = null;
 	private Map<String, Long> resultMap = null;
-	private boolean isStop = false;
+	volatile private boolean isStop = false;
 
 	@Override
 	public void run()
@@ -30,7 +30,7 @@ public class GoogleResultCounterParser extends Thread
 		{
 			if (isStop)
 			{
-				parserModel.setFinished(true);
+				parserModel.setThreadFinished();
 				return;
 			}
 
@@ -40,7 +40,7 @@ public class GoogleResultCounterParser extends Thread
 				continue;
 			}
 
-			String keywordForWeb = StringEscapeUtils.escapeHtml4(keyword);
+			String keywordForWeb = keyword;
 			try
 			{
 				keywordForWeb = URLEncoder.encode(keywordForWeb, "UTF-8");
@@ -71,7 +71,7 @@ public class GoogleResultCounterParser extends Thread
 				e.printStackTrace();
 			}
 		}
-		parserModel.setFinished(true);
+		parserModel.setThreadFinished();
 	}
 
 	private Long parseResultString(String value)
