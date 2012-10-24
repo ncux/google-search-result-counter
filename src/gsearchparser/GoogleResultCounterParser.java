@@ -3,7 +3,6 @@ package gsearchparser;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.jsoup.Jsoup;
@@ -20,22 +19,21 @@ public class GoogleResultCounterParser implements Runnable
 
 	private List<String> keywordsList = null;
 	private ParserModel parserModel = null;
-	private Map<String, Long> resultMap = null;
-	volatile private boolean isStop = false;
+	private boolean isExit = false;
 
 	@Override
 	public void run()
 	{
 		for (int i = 0; i < keywordsList.size(); i++)
 		{
-			if (isStop)
+			if (isExit)
 			{
 				parserModel.setThreadFinished();
 				return;
 			}
 
 			String keyword = keywordsList.get(i);
-			if (resultMap.get(keyword) != null)
+			if (parserModel.getResultMapValue(keyword) != null)
 			{
 				continue;
 			}
@@ -101,13 +99,8 @@ public class GoogleResultCounterParser implements Runnable
 		this.parserModel = parserModel;
 	}
 
-	public void setStop(boolean isStop)
+	synchronized public void setStop(boolean isExit)
 	{
-		this.isStop = isStop;
-	}
-
-	public void setResultMap(Map<String, Long> resultMap)
-	{
-		this.resultMap = resultMap;
+		this.isExit = isExit;
 	}
 }

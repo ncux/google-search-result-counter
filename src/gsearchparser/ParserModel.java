@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,6 +19,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
 import org.apache.commons.io.FilenameUtils;
+import org.mozilla.universalchardet.UniversalDetector;
 
 /**
  * Model for managing view
@@ -32,6 +34,7 @@ public class ParserModel
 	private ParserDialog view = null;
 	private int threadNumber = 0;
 	private int countOfFinished = 0;
+	public Object getResultMap;
 
 	public void setView(ParserDialog parserDialog)
 	{
@@ -58,8 +61,9 @@ public class ParserModel
 			keywordsList.clear();
 			FileInputStream fstream = new FileInputStream(txtFile);
 			DataInputStream in = new DataInputStream(fstream);
-			// TODO check for other encodings
-			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			BufferedReader br = new BufferedReader(new InputStreamReader(in,
+					getEncoding(txtFile)));
+
 			String strLine;
 			while ((strLine = br.readLine()) != null)
 			{
@@ -70,12 +74,27 @@ public class ParserModel
 				keywordsList.add(strLine);
 				resultMap.put(strLine, null);
 			}
-			view.setKeywordsToTable(keywordsList);
+			view.setTableData(keywordsList);
 			in.close();
 		} catch (Exception e)
 		{
 			System.err.println("Error: " + e.getMessage());
 		}
+	}
+
+	private String getEncoding(File txtFile) throws IOException
+	{
+		FileInputStream fstream = new FileInputStream(txtFile);
+		UniversalDetector universalDetector = new UniversalDetector(null);
+		int nread;
+		byte[] buf = new byte[4096];
+		while ((nread = fstream.read(buf)) > 0 && !universalDetector.isDone())
+		{
+			universalDetector.handleData(buf, 0, nread);
+		}
+		fstream.close();
+		universalDetector.dataEnd();
+		return universalDetector.getDetectedCharset();
 	}
 
 	public void startParsing()
@@ -99,22 +118,24 @@ public class ParserModel
 				threadNumber);
 		for (int i = 0; i < threadNumber; i++)
 		{
-			List<String> keywordListForParser = new ArrayList<String>();
+			List<String> keywordListForEach = new ArrayList<String>();
 			for (int j = i; j < keywordsList.size(); j += threadNumber)
 			{
-				keywordListForParser.add(keywordsList.get(j));
+				keywordListForEach.add(keywordsList.get(j));
 			}
 
 			GoogleResultCounterParser googleParser = new GoogleResultCounterParser();
 			Thread thread = new Thread(googleParser);
-			googleParser.setKeywords(keywordListForParser);
 			googleParser.setParserModel(this);
-			googleParser.setResultMap(resultMap);
+			googleParser.setKeywords(keywordListForEach);
 			thread.start();
 			googleParserMap.put(thread, googleParser);
 		}
 	}
 
+	/**
+	 * Export data from Map resultMap to *.xls document
+	 */
 	public void exportToXls()
 	{
 		if (resultMap.size() == 0)
@@ -122,7 +143,8 @@ public class ParserModel
 			showWarningEmptyData();
 			return;
 		}
-		File file = chooseFileToSave();
+
+		File file = chooseXlsToSave();
 		if (file != null)
 		{
 			// ExcelExportCreator excelCreator = new ExcelExportCreator(file,
@@ -132,14 +154,15 @@ public class ParserModel
 	}
 
 	/**
-	 * Choose file to save
+	 * Choose XLS file to save
 	 * 
 	 * @return
 	 */
-	private File chooseFileToSave()
+	private File chooseXlsToSave()
 	{
+		File file = null;
+
 		final JFileChooser fc = new JFileChooser();
-		// fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		fc.addChoosableFileFilter(new FileFilter()
 		{
 			@Override
@@ -170,15 +193,14 @@ public class ParserModel
 		int returnVal = fc.showOpenDialog(null);
 		if (returnVal == JFileChooser.APPROVE_OPTION)
 		{
-			File file = fc.getSelectedFile();
+			file = fc.getSelectedFile();
 			if (!file.getName().toLowerCase().endsWith(".xls"))
 			{
 				file = new File(file.getAbsolutePath() + ".xls");
 			}
-			return file;
 		}
 
-		return null;
+		return file;
 	}
 
 	/**
@@ -188,7 +210,6 @@ public class ParserModel
 	{
 		ResourceBundle loc_data = ResourceBundle.getBundle(
 				"resources.loc_data", ParserDialog.LOCALE_RU);
-
 		JOptionPane.showMessageDialog(view, loc_data.getString("warn_no_data"),
 				loc_data.getString("title"), JOptionPane.INFORMATION_MESSAGE);
 	}
@@ -253,5 +274,15 @@ public class ParserModel
 		keywordsList.clear();
 		resultMap.clear();
 		view.clearTable();
+	}
+
+	public Map<String, Long> getResultMap()
+	{
+		return resultMap;
+	}
+
+	public Long getResultMapValue(String keyword)
+	{
+		return resultMap.get(keyword);
 	}
 }

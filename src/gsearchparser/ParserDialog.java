@@ -55,6 +55,7 @@ public class ParserDialog extends JFrame
 
 	/**
 	 * Constructor
+	 * 
 	 * @param model
 	 */
 	public ParserDialog(ParserModel model)
@@ -108,14 +109,15 @@ public class ParserDialog extends JFrame
 		threadNumberSpinner.setMinimumSize(threadNumberSpinner
 				.getPreferredSize());
 
-		JFormattedTextField txt = ((JSpinner.NumberEditor) threadNumberSpinner
-				.getEditor()).getTextField();
-		((NumberFormatter) txt.getFormatter()).setAllowsInvalid(false);
-
 		SpinnerNumberModel threadSpinnerModel = new SpinnerNumberModel();
 		threadSpinnerModel.setMinimum(1);
 		threadSpinnerModel.setValue(1);
 		threadNumberSpinner.setModel(threadSpinnerModel);
+
+		JFormattedTextField txt = ((JSpinner.NumberEditor) threadNumberSpinner
+				.getEditor()).getTextField();
+		((NumberFormatter) txt.getFormatter()).setAllowsInvalid(false);
+
 		gbc.gridx = 1;
 		gbc.gridy = row++;
 		gbl.setConstraints(threadNumberSpinner, gbc);
@@ -249,6 +251,7 @@ public class ParserDialog extends JFrame
 
 	/**
 	 * Set source file path
+	 * 
 	 * @param path
 	 */
 	public void setSourceFilePath(String path)
@@ -258,17 +261,19 @@ public class ParserDialog extends JFrame
 
 	/**
 	 * Set keywords list to table
+	 * 
 	 * @param keywordsList
 	 */
-	public void setKeywordsToTable(List<String> keywordsList)
+	public void setTableData(List<String> keywordsList)
 	{
 		DefaultTableModel model = (DefaultTableModel) table.getModel();
 
+		@SuppressWarnings("unchecked")
 		Vector<Vector<Object>> dataVector = model.getDataVector();
 		for (String keyword : keywordsList)
 		{
 			boolean isFound = false;
-			for (Vector rowVector : dataVector)
+			for (Vector<Object> rowVector : dataVector)
 			{
 				String firstColumn = (String) rowVector.get(0);
 				if (firstColumn.equals(keyword))
@@ -286,6 +291,7 @@ public class ParserDialog extends JFrame
 
 	/**
 	 * Set result value for table
+	 * 
 	 * @param keyword
 	 * @param number
 	 */
@@ -293,8 +299,10 @@ public class ParserDialog extends JFrame
 	{
 		DefaultTableModel model = (DefaultTableModel) table.getModel();
 		int row = 0;
+
+		@SuppressWarnings("unchecked")
 		Vector<Vector<Object>> dataVector = model.getDataVector();
-		for (Vector rowVector : dataVector)
+		for (Vector<Object> rowVector : dataVector)
 		{
 			String firstColumn = (String) rowVector.get(0);
 			if (firstColumn.equals(keyword))
@@ -308,6 +316,7 @@ public class ParserDialog extends JFrame
 
 	/**
 	 * Set view when performing parsing
+	 * 
 	 * @param isPerformingParsing
 	 */
 	public void setIsPerforming(boolean isPerformingParsing)
@@ -324,13 +333,16 @@ public class ParserDialog extends JFrame
 	public void clearTable()
 	{
 		DefaultTableModel model = (DefaultTableModel) table.getModel();
-		Vector dataVector = model.getDataVector();
+
+		@SuppressWarnings("unchecked")
+		Vector<Vector<Object>> dataVector = model.getDataVector();
 		dataVector.clear();
 		model.fireTableDataChanged();
 	}
 
 	/**
 	 * Get number of threads
+	 * 
 	 * @return
 	 */
 	public Integer getThreadNumber()
