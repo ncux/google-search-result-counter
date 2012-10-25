@@ -11,10 +11,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ResourceBundle;
 
 import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
@@ -34,7 +32,6 @@ public class ParserModel
 	private ParserDialog view = null;
 	private int threadNumber = 0;
 	private int countOfFinished = 0;
-	public Object getResultMap;
 
 	public void setView(ParserDialog parserDialog)
 	{
@@ -140,7 +137,7 @@ public class ParserModel
 	{
 		if (resultMap.size() == 0)
 		{
-			showWarningEmptyData();
+			view.showWarningEmptyData();
 			return;
 		}
 
@@ -201,17 +198,6 @@ public class ParserModel
 		}
 
 		return file;
-	}
-
-	/**
-	 * Open warning window
-	 */
-	private void showWarningEmptyData()
-	{
-		ResourceBundle loc_data = ResourceBundle.getBundle(
-				"resources.loc_data", ParserDialog.LOCALE_RU);
-		JOptionPane.showMessageDialog(view, loc_data.getString("warn_no_data"),
-				loc_data.getString("title"), JOptionPane.INFORMATION_MESSAGE);
 	}
 
 	/**
