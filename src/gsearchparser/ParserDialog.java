@@ -8,6 +8,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Vector;
 
@@ -305,7 +306,11 @@ public class ParserDialog extends AbstractFrame
 			}
 			row++;
 		}
-		model.setValueAt(number, row, 1);
+
+		DecimalFormat df = new DecimalFormat("#,###");
+		String numberFormatted = df.format(number);
+
+		model.setValueAt(numberFormatted, row, 1);
 	}
 
 	/**
