@@ -7,7 +7,6 @@ import java.util.Map;
 
 import jxl.Workbook;
 import jxl.write.Label;
-import jxl.write.Number;
 import jxl.write.WritableSheet;
 import jxl.write.WritableWorkbook;
 import jxl.write.WriteException;
