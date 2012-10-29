@@ -1,26 +1,26 @@
 package gsearchparser;
 
+import gsearchparser.common.window.AbstractFrame;
+
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
 import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JFormattedTextField;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.WindowConstants;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.NumberFormatter;
 
@@ -29,13 +29,8 @@ import javax.swing.text.NumberFormatter;
  * 
  * @author SHaurushkin
  */
-public class ParserDialog extends JFrame
+public class ParserDialog extends AbstractFrame
 {
-
-	/**
-	 * Russian locale
-	 */
-	public static final Locale LOCALE_RU = new Locale("ru");
 
 	private static final long serialVersionUID = 6959318357186149652L;
 	private String pathLabel = null;
@@ -43,7 +38,7 @@ public class ParserDialog extends JFrame
 	private ParserModel parserModel = null;
 
 	/** visual components */
-	private JPanel panel = null;
+	private JPanel mainPanel = null;
 	private JLabel sourceFilePathLabel = null;
 	private JTable table = null;
 	private JButton startButton = null;
@@ -55,150 +50,151 @@ public class ParserDialog extends JFrame
 
 	/**
 	 * Constructor
+	 * 
 	 * @param model
 	 */
 	public ParserDialog(ParserModel model)
 	{
 		super();
+		this.setTitle(loc_data.getString("title"));
+		this.setContentPane(getMainPanel());
+		this.setMinimumSize(new Dimension(350, 600));
+		initDialogFrame();
 		parserModel = model;
-		initialize();
 		model.setView(this);
 	}
 
 	/**
-	 * Inititalize view
+	 * Get main panel
+	 * 
+	 * @return
 	 */
-	private void initialize()
+	private Container getMainPanel()
 	{
-		ResourceBundle loc_data = ResourceBundle.getBundle(
-				"resources.loc_data", LOCALE_RU);
-		setTitle(loc_data.getString("title"));
-		int row = 0;
-		GridBagLayout gbl = new GridBagLayout();
-		GridBagConstraints gbc = new GridBagConstraints();
-
-		chooseFileButton = new JButton(loc_data.getString("open_button"));
-		gbc.anchor = GridBagConstraints.WEST;
-		gbc.gridx = 0;
-		gbc.gridy = row++;
-		gbc.gridwidth = 2;
-		gbc.weightx = 1;
-		gbc.weighty = 1;
-		gbc.insets.left = gbc.insets.top = gbc.insets.bottom = gbc.insets.right = 10;
-		gbl.setConstraints(chooseFileButton, gbc);
-
-		pathLabel = loc_data.getString("path");
-		sourceFilePathLabel = new JLabel(pathLabel);
-		gbc.anchor = GridBagConstraints.WEST;
-		gbc.gridx = 0;
-		gbc.gridy = row++;
-		gbc.weighty = 1;
-		gbc.gridwidth = GridBagConstraints.REMAINDER;
-		gbl.setConstraints(sourceFilePathLabel, gbc);
-
-		JLabel threadNumberLabel = new JLabel(
-				loc_data.getString("thread_number"));
-		gbc.gridwidth = 1;
-		gbc.gridx = 0;
-		gbc.gridy = row;
-		gbl.setConstraints(threadNumberLabel, gbc);
-
-		threadNumberSpinner = new JSpinner();
-		threadNumberSpinner.setPreferredSize(new Dimension(45, 20));
-		threadNumberSpinner.setMinimumSize(threadNumberSpinner
-				.getPreferredSize());
-
-		JFormattedTextField txt = ((JSpinner.NumberEditor) threadNumberSpinner
-				.getEditor()).getTextField();
-		((NumberFormatter) txt.getFormatter()).setAllowsInvalid(false);
-
-		SpinnerNumberModel threadSpinnerModel = new SpinnerNumberModel();
-		threadSpinnerModel.setMinimum(1);
-		threadSpinnerModel.setValue(1);
-		threadNumberSpinner.setModel(threadSpinnerModel);
-		gbc.gridx = 1;
-		gbc.gridy = row++;
-		gbl.setConstraints(threadNumberSpinner, gbc);
-
-		startButton = new JButton(loc_data.getString("start_button"));
-		startButton.setMinimumSize(startButton.getPreferredSize());
-		gbc.gridwidth = 2;
-		gbc.weighty = 0;
-		gbc.gridwidth = 1;
-		gbc.gridx = 0;
-		gbc.gridy = row++;
-		gbc.anchor = GridBagConstraints.WEST;
-		gbl.setConstraints(startButton, gbc);
-
-		stopButton = new JButton(loc_data.getString("stop_button"));
-		stopButton.setEnabled(false);
-		gbc.gridx = 0;
-		gbc.anchor = GridBagConstraints.WEST;
-		gbc.gridy = row++;
-		gbl.setConstraints(stopButton, gbc);
-
-		table = new JTable()
+		if (mainPanel == null)
 		{
-			public boolean isCellEditable(int rowIndex, int colIndex)
+			int row = 0;
+			GridBagLayout gbl = new GridBagLayout();
+			GridBagConstraints gbc = new GridBagConstraints();
+
+			chooseFileButton = new JButton(loc_data.getString("open_button"));
+			gbc.anchor = GridBagConstraints.WEST;
+			gbc.gridx = 0;
+			gbc.gridy = row++;
+			gbc.gridwidth = 2;
+			gbc.weightx = 1;
+			gbc.weighty = 1;
+			gbc.insets.left = gbc.insets.top = gbc.insets.bottom = gbc.insets.right = 10;
+			gbl.setConstraints(chooseFileButton, gbc);
+
+			pathLabel = loc_data.getString("path");
+			sourceFilePathLabel = new JLabel(pathLabel);
+			gbc.anchor = GridBagConstraints.WEST;
+			gbc.gridx = 0;
+			gbc.gridy = row++;
+			gbc.weighty = 1;
+			gbc.gridwidth = GridBagConstraints.REMAINDER;
+			gbl.setConstraints(sourceFilePathLabel, gbc);
+
+			JLabel threadNumberLabel = new JLabel(
+					loc_data.getString("thread_number"));
+			gbc.gridwidth = 1;
+			gbc.gridx = 0;
+			gbc.gridy = row;
+			gbl.setConstraints(threadNumberLabel, gbc);
+
+			threadNumberSpinner = new JSpinner();
+			threadNumberSpinner.setPreferredSize(new Dimension(45, 20));
+			threadNumberSpinner.setMinimumSize(threadNumberSpinner
+					.getPreferredSize());
+
+			SpinnerNumberModel threadSpinnerModel = new SpinnerNumberModel();
+			threadSpinnerModel.setMinimum(1);
+			threadSpinnerModel.setValue(1);
+			threadNumberSpinner.setModel(threadSpinnerModel);
+
+			JFormattedTextField txt = ((JSpinner.NumberEditor) threadNumberSpinner
+					.getEditor()).getTextField();
+			((NumberFormatter) txt.getFormatter()).setAllowsInvalid(false);
+
+			gbc.gridx = 1;
+			gbc.gridy = row++;
+			gbl.setConstraints(threadNumberSpinner, gbc);
+
+			startButton = new JButton(loc_data.getString("start_button"));
+			startButton.setMinimumSize(startButton.getPreferredSize());
+			gbc.gridwidth = 2;
+			gbc.weighty = 0;
+			gbc.gridwidth = 1;
+			gbc.gridx = 0;
+			gbc.gridy = row++;
+			gbc.anchor = GridBagConstraints.WEST;
+			gbl.setConstraints(startButton, gbc);
+
+			stopButton = new JButton(loc_data.getString("stop_button"));
+			stopButton.setEnabled(false);
+			gbc.gridx = 0;
+			gbc.anchor = GridBagConstraints.WEST;
+			gbc.gridy = row++;
+			gbl.setConstraints(stopButton, gbc);
+
+			table = new JTable()
 			{
-				return false;
-			}
-		};
-		table.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-		DefaultTableModel model = new DefaultTableModel();
-		model.addColumn(loc_data.getString("column_keyword"));
-		model.addColumn(loc_data.getString("column_count"));
+				public boolean isCellEditable(int rowIndex, int colIndex)
+				{
+					return false;
+				}
+			};
+			table.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+			DefaultTableModel model = new DefaultTableModel();
+			model.addColumn(loc_data.getString("column_keyword"));
+			model.addColumn(loc_data.getString("column_count"));
 
-		table.setModel(model);
+			table.setModel(model);
 
-		JScrollPane sp = new JScrollPane(table);
-		sp.setPreferredSize(new Dimension(300, 300));
-		sp.setMinimumSize(new Dimension(300, 300));
-		gbc.anchor = GridBagConstraints.CENTER;
-		gbc.weighty = 1;
-		gbc.gridx = 0;
-		gbc.gridy = row++;
-		gbc.gridwidth = GridBagConstraints.REMAINDER;
-		gbl.setConstraints(sp, gbc);
+			JScrollPane sp = new JScrollPane(table);
+			sp.setPreferredSize(new Dimension(300, 300));
+			sp.setMinimumSize(new Dimension(300, 300));
+			gbc.anchor = GridBagConstraints.CENTER;
+			gbc.weighty = 1;
+			gbc.gridx = 0;
+			gbc.gridy = row++;
+			gbc.gridwidth = GridBagConstraints.REMAINDER;
+			gbl.setConstraints(sp, gbc);
 
-		exportButton = new JButton(loc_data.getString("export_button"));
-		gbc.anchor = GridBagConstraints.EAST;
-		gbc.gridx = 0;
-		gbc.gridwidth = 1;
-		gbc.gridy = row;
-		gbl.setConstraints(exportButton, gbc);
+			exportButton = new JButton(loc_data.getString("export_button"));
+			gbc.anchor = GridBagConstraints.EAST;
+			gbc.gridx = 0;
+			gbc.gridwidth = 1;
+			gbc.gridy = row;
+			gbl.setConstraints(exportButton, gbc);
 
-		clearButton = new JButton(loc_data.getString("clear_button"));
-		gbc.anchor = GridBagConstraints.WEST;
-		gbc.gridx = 1;
-		gbc.gridy = row;
-		gbl.setConstraints(clearButton, gbc);
+			clearButton = new JButton(loc_data.getString("clear_button"));
+			gbc.anchor = GridBagConstraints.WEST;
+			gbc.gridx = 1;
+			gbc.gridy = row;
+			gbl.setConstraints(clearButton, gbc);
 
-		panel = new JPanel();
-		panel.setLayout(gbl);
-		panel.add(chooseFileButton);
-		panel.add(exportButton);
-		panel.add(sp);
-		panel.add(startButton);
-		panel.add(stopButton);
-		panel.add(sourceFilePathLabel);
-		panel.add(clearButton);
-		panel.add(threadNumberLabel);
-		panel.add(threadNumberSpinner);
-
-		this.setContentPane(panel);
-		// this.setLocation(new Point(350, 300));
-		this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		this.setMinimumSize(new Dimension(350, 600));
-		this.pack();
-		this.setLocationByPlatform(true);
-		addListeners();
+			mainPanel = new JPanel();
+			mainPanel.setLayout(gbl);
+			mainPanel.add(chooseFileButton);
+			mainPanel.add(exportButton);
+			mainPanel.add(sp);
+			mainPanel.add(startButton);
+			mainPanel.add(stopButton);
+			mainPanel.add(sourceFilePathLabel);
+			mainPanel.add(clearButton);
+			mainPanel.add(threadNumberLabel);
+			mainPanel.add(threadNumberSpinner);
+		}
+		return mainPanel;
 	}
 
 	/**
-	 * Add listeners to view
+	 * @see gsearchparser.common.window.AbstractFrame#addListeners()
 	 */
-	private void addListeners()
+	@Override
+	protected void addListeners()
 	{
 		chooseFileButton.addActionListener(new ActionListener()
 		{
@@ -249,6 +245,7 @@ public class ParserDialog extends JFrame
 
 	/**
 	 * Set source file path
+	 * 
 	 * @param path
 	 */
 	public void setSourceFilePath(String path)
@@ -258,17 +255,19 @@ public class ParserDialog extends JFrame
 
 	/**
 	 * Set keywords list to table
+	 * 
 	 * @param keywordsList
 	 */
-	public void setKeywordsToTable(List<String> keywordsList)
+	public void setTableData(List<String> keywordsList)
 	{
 		DefaultTableModel model = (DefaultTableModel) table.getModel();
 
+		@SuppressWarnings("unchecked")
 		Vector<Vector<Object>> dataVector = model.getDataVector();
 		for (String keyword : keywordsList)
 		{
 			boolean isFound = false;
-			for (Vector rowVector : dataVector)
+			for (Vector<Object> rowVector : dataVector)
 			{
 				String firstColumn = (String) rowVector.get(0);
 				if (firstColumn.equals(keyword))
@@ -286,6 +285,7 @@ public class ParserDialog extends JFrame
 
 	/**
 	 * Set result value for table
+	 * 
 	 * @param keyword
 	 * @param number
 	 */
@@ -293,8 +293,10 @@ public class ParserDialog extends JFrame
 	{
 		DefaultTableModel model = (DefaultTableModel) table.getModel();
 		int row = 0;
+
+		@SuppressWarnings("unchecked")
 		Vector<Vector<Object>> dataVector = model.getDataVector();
-		for (Vector rowVector : dataVector)
+		for (Vector<Object> rowVector : dataVector)
 		{
 			String firstColumn = (String) rowVector.get(0);
 			if (firstColumn.equals(keyword))
@@ -308,6 +310,7 @@ public class ParserDialog extends JFrame
 
 	/**
 	 * Set view when performing parsing
+	 * 
 	 * @param isPerformingParsing
 	 */
 	public void setIsPerforming(boolean isPerformingParsing)
@@ -324,17 +327,30 @@ public class ParserDialog extends JFrame
 	public void clearTable()
 	{
 		DefaultTableModel model = (DefaultTableModel) table.getModel();
-		Vector dataVector = model.getDataVector();
+
+		@SuppressWarnings("unchecked")
+		Vector<Vector<Object>> dataVector = model.getDataVector();
 		dataVector.clear();
 		model.fireTableDataChanged();
 	}
 
 	/**
 	 * Get number of threads
+	 * 
 	 * @return
 	 */
 	public Integer getThreadNumber()
 	{
 		return (Integer) threadNumberSpinner.getValue();
 	}
+
+	/**
+	 * Open warning window
+	 */
+	public void showWarningEmptyData()
+	{
+		JOptionPane.showMessageDialog(this, loc_data.getString("warn_no_data"),
+				loc_data.getString("title"), JOptionPane.INFORMATION_MESSAGE);
+	}
+
 }

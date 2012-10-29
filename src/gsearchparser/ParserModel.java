@@ -4,20 +4,20 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.Vector;
 
 import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
 import org.apache.commons.io.FilenameUtils;
+import org.mozilla.universalchardet.UniversalDetector;
 
 /**
  * Model for managing view
@@ -26,18 +26,12 @@ import org.apache.commons.io.FilenameUtils;
  */
 public class ParserModel
 {
-	private List<GoogleResultCounterParser> googleParserList = null;
+	private Map<Thread, GoogleResultCounterParser> googleParserMap = null;
 	private List<String> keywordsList = new ArrayList<String>();
-	private List<Boolean> keywordsListProcessed = new Vector<Boolean>();
 	private Map<String, Long> resultMap = new LinkedHashMap<String, Long>();
 	private ParserDialog view = null;
 	private int threadNumber = 0;
 	private int countOfFinished = 0;
-
-	public ParserModel()
-	{
-
-	}
 
 	public void setView(ParserDialog parserDialog)
 	{
@@ -65,7 +59,8 @@ public class ParserModel
 			FileInputStream fstream = new FileInputStream(txtFile);
 			DataInputStream in = new DataInputStream(fstream);
 			BufferedReader br = new BufferedReader(new InputStreamReader(in,
-					"windows-1251"));
+					getEncoding(txtFile)));
+
 			String strLine;
 			while ((strLine = br.readLine()) != null)
 			{
@@ -76,12 +71,27 @@ public class ParserModel
 				keywordsList.add(strLine);
 				resultMap.put(strLine, null);
 			}
-			view.setKeywordsToTable(keywordsList);
+			view.setTableData(keywordsList);
 			in.close();
 		} catch (Exception e)
 		{
 			System.err.println("Error: " + e.getMessage());
 		}
+	}
+
+	private String getEncoding(File txtFile) throws IOException
+	{
+		FileInputStream fstream = new FileInputStream(txtFile);
+		UniversalDetector universalDetector = new UniversalDetector(null);
+		int nread;
+		byte[] buf = new byte[4096];
+		while ((nread = fstream.read(buf)) > 0 && !universalDetector.isDone())
+		{
+			universalDetector.handleData(buf, 0, nread);
+		}
+		fstream.close();
+		universalDetector.dataEnd();
+		return universalDetector.getDetectedCharset();
 	}
 
 	public void startParsing()
@@ -101,61 +111,55 @@ public class ParserModel
 			threadNumber = keywordsList.size();
 		}
 
-		googleParserList = new ArrayList<GoogleResultCounterParser>(
+		googleParserMap = new HashMap<Thread, GoogleResultCounterParser>(
 				threadNumber);
-		keywordsListProcessed = new Vector<Boolean>(keywordsList.size());
-		for (int i = 0; i < keywordsList.size(); i++)
-		{
-			keywordsListProcessed.add(Boolean.FALSE);
-		}
 		for (int i = 0; i < threadNumber; i++)
 		{
-			List<String> keywordListForParser = null;
-			if (i < threadNumber - 1)
+			List<String> keywordListForEach = new ArrayList<String>();
+			for (int j = i; j < keywordsList.size(); j += threadNumber)
 			{
-				keywordListForParser = keywordsList.subList(i
-						* keywordsNumberForEach, i * keywordsNumberForEach
-						+ keywordsNumberForEach);
-			} else
-			{
-				// last thread analyze all keywords in the end
-				keywordListForParser = keywordsList.subList(i
-						* keywordsNumberForEach, keywordsList.size());
+				keywordListForEach.add(keywordsList.get(j));
 			}
-			GoogleResultCounterParser googleParser = new GoogleResultCounterParser();
-			googleParser.setKeywords(keywordsList);
-			googleParser.setKeywordsProcessed(keywordsListProcessed);
-			googleParser.setParserModel(this);
-			googleParser.setResultMap(resultMap);
-			googleParser.start();
-			googleParserList.add(googleParser);
-		}
-	}
 
-	public void exportToXls()
-	{
-		if (resultMap.size() == 0)
-		{
-			showWarningEmptyData();
-			return;
-		}
-		File file = chooseFileToSave();
-		if (file != null)
-		{
-			ExcelExportCreator excelCreator = new ExcelExportCreator(file,
-					resultMap);
-			excelCreator.create();
+			GoogleResultCounterParser googleParser = new GoogleResultCounterParser();
+			Thread thread = new Thread(googleParser);
+			googleParser.setParserModel(this);
+			googleParser.setKeywords(keywordListForEach);
+			thread.start();
+			googleParserMap.put(thread, googleParser);
 		}
 	}
 
 	/**
-	 * Choose file to save
+	 * Export data from Map resultMap to *.xls document
+	 */
+	public void exportToXls()
+	{
+		if (resultMap.size() == 0)
+		{
+			view.showWarningEmptyData();
+			return;
+		}
+
+		File file = chooseXlsToSave();
+		if (file != null)
+		{
+			// ExcelExportCreator excelCreator = new ExcelExportCreator(file,
+			// resultMap);
+			// excelCreator.create();
+		}
+	}
+
+	/**
+	 * Choose XLS file to save
+	 * 
 	 * @return
 	 */
-	private File chooseFileToSave()
+	private File chooseXlsToSave()
 	{
+		File file = null;
+
 		final JFileChooser fc = new JFileChooser();
-		// fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		fc.addChoosableFileFilter(new FileFilter()
 		{
 			@Override
@@ -186,27 +190,14 @@ public class ParserModel
 		int returnVal = fc.showOpenDialog(null);
 		if (returnVal == JFileChooser.APPROVE_OPTION)
 		{
-			File file = fc.getSelectedFile();
+			file = fc.getSelectedFile();
 			if (!file.getName().toLowerCase().endsWith(".xls"))
 			{
 				file = new File(file.getAbsolutePath() + ".xls");
 			}
-			return file;
 		}
 
-		return null;
-	}
-
-	/**
-	 * Open warning window
-	 */
-	private void showWarningEmptyData()
-	{
-		ResourceBundle loc_data = ResourceBundle.getBundle(
-				"resources.loc_data", ParserDialog.LOCALE_RU);
-
-		JOptionPane.showMessageDialog(view, loc_data.getString("warn_no_data"),
-				loc_data.getString("title"), JOptionPane.INFORMATION_MESSAGE);
+		return file;
 	}
 
 	/**
@@ -234,11 +225,11 @@ public class ParserModel
 	 */
 	public void stopParsing()
 	{
-		for (GoogleResultCounterParser parser : googleParserList)
+		for (Thread thread : googleParserMap.keySet())
 		{
-			if (parser != null)
+			if (thread != null && thread.isAlive())
 			{
-				parser.setStop(true);
+				googleParserMap.get(thread).setStop(true);
 			}
 		}
 	}
@@ -255,7 +246,7 @@ public class ParserModel
 		});
 	}
 
-	public synchronized void setFinished(final boolean isPerforming)
+	public synchronized void setThreadFinished()
 	{
 		countOfFinished++;
 		if (countOfFinished == threadNumber)
@@ -269,5 +260,15 @@ public class ParserModel
 		keywordsList.clear();
 		resultMap.clear();
 		view.clearTable();
+	}
+
+	public Map<String, Long> getResultMap()
+	{
+		return resultMap;
+	}
+
+	public Long getResultMapValue(String keyword)
+	{
+		return resultMap.get(keyword);
 	}
 }

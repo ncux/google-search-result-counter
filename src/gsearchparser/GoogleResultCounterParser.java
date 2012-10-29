@@ -2,9 +2,7 @@ package gsearchparser;
 
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.jsoup.Jsoup;
@@ -16,36 +14,31 @@ import org.jsoup.nodes.Element;
  * 
  * @author SHaurushkin
  */
-public class GoogleResultCounterParser extends Thread
+public class GoogleResultCounterParser implements Runnable
 {
 
 	private List<String> keywordsList = null;
 	private ParserModel parserModel = null;
-	private Map<String, Long> resultMap = null;
-	private boolean isStop = false;
-	private List<Boolean> keywordsListProcessed = null;
+	private boolean isExit = false;
 
 	@Override
 	public void run()
 	{
-		Iterator<String> it = keywordsList.iterator();
-		while (it.hasNext())
+		for (int i = 0; i < keywordsList.size(); i++)
 		{
-			if (isStop)
+			if (isExit)
 			{
-				parserModel.setFinished(true);
+				parserModel.setThreadFinished();
 				return;
 			}
 
-			String keyword = it.next();
-			if (resultMap.get(keyword) != null)
+			String keyword = keywordsList.get(i);
+			if (parserModel.getResultMapValue(keyword) != null)
 			{
 				continue;
 			}
-			
-			
-			model.markAsProcessing(keyword);
-			String keywordForWeb = StringEscapeUtils.escapeHtml4(keyword);
+
+			String keywordForWeb = keyword;
 			try
 			{
 				keywordForWeb = URLEncoder.encode(keywordForWeb, "UTF-8");
@@ -61,7 +54,14 @@ public class GoogleResultCounterParser extends Thread
 				if (el != null)
 				{
 					String value = el.ownText();
-					Long number = parseResultString(value);
+					Long number = null;
+					if (!value.isEmpty())
+					{
+						number = parseResultString(value);
+					} else
+					{
+						number = Long.valueOf("0");
+					}
 					parserModel.addToResultMap(keyword, number);
 				}
 			} catch (IOException e)
@@ -69,7 +69,7 @@ public class GoogleResultCounterParser extends Thread
 				e.printStackTrace();
 			}
 		}
-		parserModel.setFinished(true);
+		parserModel.setThreadFinished();
 	}
 
 	private Long parseResultString(String value)
@@ -99,18 +99,8 @@ public class GoogleResultCounterParser extends Thread
 		this.parserModel = parserModel;
 	}
 
-	public void setStop(boolean isStop)
+	synchronized public void setStop(boolean isExit)
 	{
-		this.isStop = isStop;
-	}
-
-	public void setResultMap(Map<String, Long> resultMap)
-	{
-		this.resultMap = resultMap;
-	}
-
-	public void setKeywordsProcessed(List<Boolean> keywordsListProcessed)
-	{
-		this.keywordsListProcessed = keywordsListProcessed;
+		this.isExit = isExit;
 	}
 }
