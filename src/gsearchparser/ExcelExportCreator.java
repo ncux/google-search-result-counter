@@ -1,9 +1,12 @@
 package gsearchparser;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
+
+import javax.swing.JOptionPane;
 
 import jxl.Workbook;
 import jxl.write.Label;
@@ -40,8 +43,16 @@ public class ExcelExportCreator
 		try
 		{
 			// create xls
-			WritableWorkbook workbook;
-			workbook = Workbook.createWorkbook(file);
+			WritableWorkbook workbook = null;
+			try
+			{
+				workbook = Workbook.createWorkbook(file);
+			} catch (FileNotFoundException e)
+			{
+				JOptionPane.showMessageDialog(null, e.getLocalizedMessage(),
+						"Something is wrong", JOptionPane.INFORMATION_MESSAGE);
+				return;
+			}
 			WritableSheet sheet = workbook.createSheet("First Sheet", 0);
 
 			// for each keyword request google
@@ -67,6 +78,7 @@ public class ExcelExportCreator
 		} catch (IOException e)
 		{
 			e.printStackTrace();
+
 		} catch (WriteException e)
 		{
 			e.printStackTrace();
