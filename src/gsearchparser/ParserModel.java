@@ -144,9 +144,9 @@ public class ParserModel
 		File file = chooseXlsToSave();
 		if (file != null)
 		{
-			// ExcelExportCreator excelCreator = new ExcelExportCreator(file,
-			// resultMap);
-			// excelCreator.create();
+			ExcelExportCreator excelCreator = new ExcelExportCreator(file,
+					resultMap);
+			excelCreator.create();
 		}
 	}
 
