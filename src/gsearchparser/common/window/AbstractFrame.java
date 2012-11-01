@@ -13,12 +13,14 @@ import javax.swing.WindowConstants;
  * 
  * @author SHaurushkin
  */
+@SuppressWarnings("serial")
 public abstract class AbstractFrame extends JFrame
 {
 	/**
-	 * Russian locale
+	 * System locale
 	 */
-	private static final Locale LOCALE_RU = new Locale("ru");
+	private static final Locale LOCALE = new Locale(
+			System.getProperty("user.language"));
 	protected ResourceBundle loc_data = null;
 
 	/**
@@ -29,7 +31,7 @@ public abstract class AbstractFrame extends JFrame
 	public AbstractFrame()
 	{
 		super();
-		loc_data = ResourceBundle.getBundle("resources.loc_data", LOCALE_RU);
+		loc_data = ResourceBundle.getBundle("resources.loc_data", LOCALE);
 	}
 
 	/**
