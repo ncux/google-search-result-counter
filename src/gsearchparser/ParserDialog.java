@@ -32,9 +32,7 @@ import javax.swing.text.NumberFormatter;
  */
 public class ParserDialog extends AbstractFrame
 {
-
 	private static final long serialVersionUID = 6959318357186149652L;
-	private String pathLabel = null;
 
 	private ParserModel parserModel = null;
 
@@ -70,6 +68,7 @@ public class ParserDialog extends AbstractFrame
 	 * 
 	 * @return
 	 */
+	@SuppressWarnings("serial")
 	private Container getMainPanel()
 	{
 		if (mainPanel == null)
@@ -88,8 +87,7 @@ public class ParserDialog extends AbstractFrame
 			gbc.insets.left = gbc.insets.top = gbc.insets.bottom = gbc.insets.right = 10;
 			gbl.setConstraints(chooseFileButton, gbc);
 
-			pathLabel = loc_data.getString("path");
-			sourceFilePathLabel = new JLabel(pathLabel);
+			sourceFilePathLabel = new JLabel(loc_data.getString("path"));
 			gbc.anchor = GridBagConstraints.WEST;
 			gbc.gridx = 0;
 			gbc.gridy = row++;
@@ -247,11 +245,11 @@ public class ParserDialog extends AbstractFrame
 	/**
 	 * Set source file path
 	 * 
-	 * @param path
+	 * @param path to source file
 	 */
 	public void setSourceFilePath(String path)
 	{
-		sourceFilePathLabel.setText(pathLabel + path);
+		sourceFilePathLabel.setText(loc_data.getString("path") + path);
 	}
 
 	/**
@@ -350,12 +348,11 @@ public class ParserDialog extends AbstractFrame
 	}
 
 	/**
-	 * Open warning window
+	 * Open warning window with warning about empty data
 	 */
 	public void showWarningEmptyData()
 	{
 		JOptionPane.showMessageDialog(this, loc_data.getString("warn_no_data"),
 				loc_data.getString("title"), JOptionPane.INFORMATION_MESSAGE);
 	}
-
 }

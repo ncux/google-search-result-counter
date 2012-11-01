@@ -25,8 +25,6 @@ public abstract class AbstractFrame extends JFrame
 
 	/**
 	 * Constructor
-	 * 
-	 * @param model
 	 */
 	public AbstractFrame()
 	{

@@ -21,6 +21,9 @@ import jxl.write.WriteException;
  */
 public class ExcelExportCreator
 {
+	private static final int EXCEL_COLUMN_KEYWORD = 0;
+	private static final int EXCEL_COLUMN_AMOUNT = 1;
+
 	private File file = null;
 	private Map<String, Long> resultMap = null;
 
@@ -42,7 +45,7 @@ public class ExcelExportCreator
 	{
 		try
 		{
-			// create xls
+			// create document
 			WritableWorkbook workbook = null;
 			try
 			{
@@ -55,24 +58,28 @@ public class ExcelExportCreator
 			}
 			WritableSheet sheet = workbook.createSheet("First Sheet", 0);
 
-			// for each keyword request google
+			// fill document
 			Iterator<String> iterator = resultMap.keySet().iterator();
 			int row = 0;
 			while (iterator.hasNext())
 			{
 				String keyword = iterator.next();
-				Label label = new Label(0, row, keyword);
+
+				Label label = new Label(EXCEL_COLUMN_KEYWORD, row, keyword);
 				sheet.addCell(label);
-				Long value = resultMap.get(keyword);
-				if (value != null)
+
+				Long amount = resultMap.get(keyword);
+				if (amount != null)
 				{
-					Label number = new Label(1, row, value.toString());
+					Label number = new Label(EXCEL_COLUMN_AMOUNT, row,
+							String.valueOf(amount));
 					sheet.addCell(number);
 				}
+
 				row++;
 			}
 
-			// save xls
+			// save document
 			workbook.write();
 			workbook.close();
 		} catch (IOException e)

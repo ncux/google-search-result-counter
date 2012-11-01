@@ -10,7 +10,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 /**
- * 
+ * Parse google search page for each keyword from <code>keywordsList</code>.
  * 
  * @author SHaurushkin
  */
@@ -21,11 +21,23 @@ public class GoogleResultCounterParser implements Runnable
 	private ParserModel parserModel = null;
 	private boolean isExit = false;
 
+	/**
+	 * @param parserModel
+	 * @param keywordList
+	 */
+	public GoogleResultCounterParser(ParserModel parserModel,
+			List<String> keywordList)
+	{
+		this.keywordsList = keywordList;
+		this.parserModel = parserModel;
+	}
+
 	@Override
 	public void run()
 	{
 		for (int i = 0; i < keywordsList.size(); i++)
 		{
+			// if we need to exit
 			if (isExit)
 			{
 				parserModel.setThreadFinished();
@@ -33,15 +45,16 @@ public class GoogleResultCounterParser implements Runnable
 			}
 
 			String keyword = keywordsList.get(i);
+
+			// check if result already exists
 			if (parserModel.getResultMapValue(keyword) != null)
 			{
 				continue;
 			}
 
-			String keywordForWeb = keyword;
 			try
 			{
-				keywordForWeb = URLEncoder.encode(keywordForWeb, "UTF-8");
+				String keywordForWeb = URLEncoder.encode(keyword, "UTF-8");
 				Document doc = Jsoup
 						.connect(
 								"http://www.google.ru/search?q="
@@ -53,15 +66,7 @@ public class GoogleResultCounterParser implements Runnable
 				Element el = doc.getElementById("resultStats");
 				if (el != null)
 				{
-					String value = el.ownText();
-					Long number = null;
-					if (!value.isEmpty())
-					{
-						number = parseResultString(value);
-					} else
-					{
-						number = Long.valueOf("0");
-					}
+					Long number = parseResultString(el.ownText());
 					parserModel.addToResultMap(keyword, number);
 				}
 			} catch (IOException e)
@@ -72,8 +77,18 @@ public class GoogleResultCounterParser implements Runnable
 		parserModel.setThreadFinished();
 	}
 
+	/**
+	 * Parse string with amount of results
+	 * @param value
+	 * @return amount of search results
+	 */
 	private Long parseResultString(String value)
 	{
+		if (value.isEmpty())
+		{
+			return Long.valueOf("0");
+		}
+
 		String strWithoutEscapes = StringEscapeUtils.unescapeHtml(value);
 		strWithoutEscapes = strWithoutEscapes.replaceAll("\\D+", "");
 
@@ -83,23 +98,17 @@ public class GoogleResultCounterParser implements Runnable
 			resultNumber = Long.valueOf(strWithoutEscapes);
 		} catch (NumberFormatException exc)
 		{
-
+			exc.printStackTrace();
 		}
 
 		return resultNumber;
 	}
 
-	public void setKeywords(List<String> keywordsList)
-	{
-		this.keywordsList = keywordsList;
-	}
-
-	public void setParserModel(ParserModel parserModel)
-	{
-		this.parserModel = parserModel;
-	}
-
-	synchronized public void setStop(boolean isExit)
+	/**
+	 * Set thread to stop
+	 * @param isExit
+	 */
+	synchronized public void setExit(boolean isExit)
 	{
 		this.isExit = isExit;
 	}

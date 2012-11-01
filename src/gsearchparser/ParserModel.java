@@ -121,10 +121,9 @@ public class ParserModel
 				keywordListForEach.add(keywordsList.get(j));
 			}
 
-			GoogleResultCounterParser googleParser = new GoogleResultCounterParser();
+			GoogleResultCounterParser googleParser = new GoogleResultCounterParser(
+					this, keywordListForEach);
 			Thread thread = new Thread(googleParser);
-			googleParser.setParserModel(this);
-			googleParser.setKeywords(keywordListForEach);
 			thread.start();
 			googleParserMap.put(thread, googleParser);
 		}
@@ -160,6 +159,7 @@ public class ParserModel
 		File file = null;
 
 		final JFileChooser fc = new JFileChooser();
+		fc.setAcceptAllFileFilterUsed(false);
 		fc.addChoosableFileFilter(new FileFilter()
 		{
 			@Override
@@ -229,7 +229,7 @@ public class ParserModel
 		{
 			if (thread != null && thread.isAlive())
 			{
-				googleParserMap.get(thread).setStop(true);
+				googleParserMap.get(thread).setExit(true);
 			}
 		}
 	}
