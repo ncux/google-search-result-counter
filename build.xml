@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns:ivy="antlib:fr.jayasoft.ivy.ant" basedir="." default="build" name="GoogleParser">
-	<property environment="env" />
+	<property file="build.properties"/>	
 	<property name="debuglevel" value="source,lines,vars" />
+	
+	<path id='compile.classpath'>
+		<fileset dir='lib'>
+	    	<include name='*.jar'/>
+	    </fileset>
+	</path>
+	
 	<target name="init" depends="resolve">
-		<mkdir dir="bin" />
+		<mkdir dir="${classes.dir}" />
 		<copy includeemptydirs="false" todir="bin">
-			<fileset dir="src">
+			<fileset dir="${src.dir}">
 				<exclude name="**/*.launch" />
 				<exclude name="**/*.java" />
 			</fileset>
@@ -15,17 +22,15 @@
 		<ivy:retrieve />
 	</target>
 	<target name="clean">
-		<delete dir="bin" />
+		<delete dir="${classes.dir}/*" />
 	</target>
 	<target depends="init" name="build">
 		<echo message="${ant.project.name}: ${ant.file}" />
-		<javac debug="true" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
-			<src path="src" />
-		</javac>
+		<javac srcdir="${src.dir}" destdir="${classes.dir}" classpathref="compile.classpath"/>
 	</target>
 	<target name="Main">
 		<java classname="gsearchparser.Main" failonerror="true" fork="yes">
-			<classpath location="bin"/>
+			<classpath location="${classes.dir}"/>
 		</java>
 	</target>
 </project>
