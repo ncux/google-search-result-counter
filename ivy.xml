@@ -1,0 +1,10 @@
+<ivy-module version="2.0">
+    <info organisation="ncux" module="google-parser"/>
+    <dependencies>
+        <dependency org="commons-lang" name="commons-lang" rev="2.6"/>
+        <dependency org="commons-io" name="commons-io" rev="2.4"/>
+        <dependency org="org.jsoup" name="jsoup" rev="1.6.3"/>
+        <dependency org="com.googlecode.juniversalchardet" name="juniversalchardet" rev="1.0.3"/>
+        <dependency org="net.sourceforge.jexcelapi" name="jxl" rev="2.6.12"/>
+	</dependencies>
+</ivy-module>

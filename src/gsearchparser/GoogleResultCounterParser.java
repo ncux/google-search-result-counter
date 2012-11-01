@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.List;
 
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -74,7 +74,7 @@ public class GoogleResultCounterParser implements Runnable
 
 	private Long parseResultString(String value)
 	{
-		String strWithoutEscapes = StringEscapeUtils.unescapeHtml4(value);
+		String strWithoutEscapes = StringEscapeUtils.unescapeHtml(value);
 		strWithoutEscapes = strWithoutEscapes.replaceAll("\\D+", "");
 
 		Long resultNumber = null;
