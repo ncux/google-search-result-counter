@@ -21,7 +21,7 @@ public class RestoreMe
 	 * This will end up in the current directory A more sensible location is a
 	 * sub-directory of user.home. (left as an exercise for the reader)
 	 */
-	public static final String fileName = "options.prop";
+	public static final String fileName = "data/options.prop";
 
 	/** Store location & size of UI */
 	public static void storeOptions(Frame f)
@@ -43,6 +43,7 @@ public class RestoreMe
 
 		try
 		{
+			file.getParentFile().mkdirs();
 			BufferedWriter br = new BufferedWriter(new FileWriter(file));
 			p.store(br, "Properties of the user frame");
 		} catch (IOException e)
