@@ -52,7 +52,7 @@ public class ParserController implements ModelSubscriber {
 			}
 
 			model.setThreadNumber(threadNumber);
-			model.setResultMap(view.getKeywordsForSearch());
+			model.setResultMap(view.getKeywordsMap());
 			model.startParsing();
 		}
 	}
@@ -76,7 +76,7 @@ public class ParserController implements ModelSubscriber {
 
 			File openedFile = view.chooseXlsToSave();
 			if (openedFile != null) {
-				model.setResultMap(view.getKeywordsForSearch());
+				model.setResultMap(view.getKeywordsMap());
 				model.exportToXls(openedFile);
 			}
 		}

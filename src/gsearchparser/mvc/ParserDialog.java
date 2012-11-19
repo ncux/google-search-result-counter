@@ -154,6 +154,11 @@ public class ParserDialog extends AbstractFrame {
 					}
 					return true;
 				}
+				
+			    public boolean editCellAt(int row, int column) {
+			        return editCellAt(row, column, null);
+			    }
+
 			};
 			DefaultTableModel model = new DefaultTableModel();
 			model.addColumn(loc_data.getString("column_keyword"));
@@ -419,26 +424,35 @@ public class ParserDialog extends AbstractFrame {
 		model.addRow(new String[] {});
 	}
 
-	public Map<String, Long> getKeywordsForSearch() {
+	/**
+	 * Get map of keywords with results
+	 * 
+	 * @return
+	 */
+	public Map<String, Long> getKeywordsMap() {
 		Map<String, Long> resultMap = new HashMap<String, Long>();
 
 		DefaultTableModel model = (DefaultTableModel) table.getModel();
 		@SuppressWarnings("unchecked")
 		Vector<Vector<Object>> dataVector = model.getDataVector();
 		for (Vector<Object> rowVector : dataVector) {
+
+			// process keyword
 			String keywordColumn = (String) rowVector.get(COLUMN_KEYWORD);
 			if (keywordColumn == null || keywordColumn.isEmpty()) {
 				continue;
 			}
-
+			// parse result
 			String resultColumn = (String) rowVector.get(COLUMN_RESULT);
 			Long amount = null;
-			try {
-
-				amount = (Long) resultFormat.parse(resultColumn);
-			} catch (ParseException | NullPointerException e) {
-				// ignore, put null
+			if (resultColumn != null) {
+				try {
+					amount = (Long) resultFormat.parse(resultColumn);
+				} catch (ParseException e) {
+					// ignore, put null
+				}
 			}
+
 			resultMap.put(keywordColumn, amount);
 		}
 
