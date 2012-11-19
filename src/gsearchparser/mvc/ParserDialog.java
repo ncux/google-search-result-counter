@@ -193,6 +193,10 @@ public class ParserDialog extends AbstractFrame {
 	 *            to source file
 	 */
 	public void setSourceFilePath(String path) {
+		if (path == null) {
+			path = "";
+		}
+
 		sourceFilePathLabel.setText(loc_data.getString("path") + path);
 	}
 

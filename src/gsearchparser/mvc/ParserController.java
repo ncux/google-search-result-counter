@@ -84,6 +84,7 @@ public class ParserController implements ModelSubscriber {
 		public void actionPerformed(ActionEvent e) {
 			model.clearList();
 			view.clearTable();
+			view.setSourceFilePath(null);
 		}
 	}
 
