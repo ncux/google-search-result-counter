@@ -1,5 +1,7 @@
 package gsearchparser;
 
+import gsearchparser.mvc.ParserModel;
+
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.List;

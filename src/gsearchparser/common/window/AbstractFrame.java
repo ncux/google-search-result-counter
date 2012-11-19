@@ -48,11 +48,5 @@ public abstract class AbstractFrame extends JFrame
 		});
 		this.pack();
 		RestoreMe.restoreOptions(this);
-		addListeners();
 	}
-
-	/**
-	 * Add listeners to the components
-	 */
-	abstract protected void addListeners();
 }

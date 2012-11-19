@@ -1,4 +1,4 @@
-package gsearchparser;
+package gsearchparser.mvc;
 
 import gsearchparser.common.window.AbstractFrame;
 
@@ -6,13 +6,17 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.text.DecimalFormat;
-import java.util.List;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Vector;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -22,19 +26,19 @@ import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.NumberFormatter;
+
+import org.apache.commons.io.FilenameUtils;
 
 /**
  * Main dialog view
  * 
  * @author SHaurushkin
  */
-public class ParserDialog extends AbstractFrame
-{
+public class ParserDialog extends AbstractFrame {
 	private static final long serialVersionUID = 6959318357186149652L;
-
-	private ParserModel parserModel = null;
 
 	/** visual components */
 	private JPanel mainPanel = null;
@@ -52,15 +56,12 @@ public class ParserDialog extends AbstractFrame
 	 * 
 	 * @param model
 	 */
-	public ParserDialog(ParserModel model)
-	{
+	public ParserDialog(ParserModel model) {
 		super();
 		this.setTitle(loc_data.getString("title"));
 		this.setContentPane(getMainPanel());
 		this.setMinimumSize(new Dimension(350, 600));
 		initDialogFrame();
-		parserModel = model;
-		model.setView(this);
 	}
 
 	/**
@@ -69,10 +70,8 @@ public class ParserDialog extends AbstractFrame
 	 * @return
 	 */
 	@SuppressWarnings("serial")
-	private Container getMainPanel()
-	{
-		if (mainPanel == null)
-		{
+	private Container getMainPanel() {
+		if (mainPanel == null) {
 			int row = 0;
 			GridBagLayout gbl = new GridBagLayout();
 			GridBagConstraints gbc = new GridBagConstraints();
@@ -137,10 +136,8 @@ public class ParserDialog extends AbstractFrame
 			gbc.gridy = row++;
 			gbl.setConstraints(stopButton, gbc);
 
-			table = new JTable()
-			{
-				public boolean isCellEditable(int rowIndex, int colIndex)
-				{
+			table = new JTable() {
+				public boolean isCellEditable(int rowIndex, int colIndex) {
 					return false;
 				}
 			};
@@ -190,65 +187,12 @@ public class ParserDialog extends AbstractFrame
 	}
 
 	/**
-	 * @see gsearchparser.common.window.AbstractFrame#addListeners()
-	 */
-	@Override
-	protected void addListeners()
-	{
-		chooseFileButton.addActionListener(new ActionListener()
-		{
-
-			public void actionPerformed(ActionEvent e)
-			{
-				parserModel.openChooseTxtFileDialog();
-			}
-		});
-
-		startButton.addActionListener(new ActionListener()
-		{
-
-			public void actionPerformed(ActionEvent e)
-			{
-				parserModel.startParsing();
-			}
-		});
-
-		stopButton.addActionListener(new ActionListener()
-		{
-
-			public void actionPerformed(ActionEvent e)
-			{
-				parserModel.stopParsing();
-			}
-		});
-
-		exportButton.addActionListener(new ActionListener()
-		{
-
-			public void actionPerformed(ActionEvent e)
-			{
-				parserModel.exportToXls();
-			}
-		});
-
-		clearButton.addActionListener(new ActionListener()
-		{
-
-			public void actionPerformed(ActionEvent e)
-			{
-				parserModel.clearList();
-			}
-		});
-
-	}
-
-	/**
 	 * Set source file path
 	 * 
-	 * @param path to source file
+	 * @param path
+	 *            to source file
 	 */
-	public void setSourceFilePath(String path)
-	{
+	public void setSourceFilePath(String path) {
 		sourceFilePathLabel.setText(loc_data.getString("path") + path);
 	}
 
@@ -257,28 +201,30 @@ public class ParserDialog extends AbstractFrame
 	 * 
 	 * @param keywordsList
 	 */
-	public void setTableData(List<String> keywordsList)
-	{
+	public void setTableData(Collection<String> keywordsList) {
 		DefaultTableModel model = (DefaultTableModel) table.getModel();
 
 		@SuppressWarnings("unchecked")
 		Vector<Vector<Object>> dataVector = model.getDataVector();
-		for (String keyword : keywordsList)
-		{
+		for (String keyword : keywordsList) {
 			boolean isFound = false;
-			for (Vector<Object> rowVector : dataVector)
-			{
+			for (Vector<Object> rowVector : dataVector) {
 				String firstColumn = (String) rowVector.get(0);
-				if (firstColumn.equals(keyword))
-				{
+				if (firstColumn.equals(keyword)) {
 					isFound = true;
 				}
 			}
-			if (!isFound)
-			{
-				model.addRow(new String[]
-				{ keyword });
+			if (!isFound) {
+				model.addRow(new String[] { keyword });
 			}
+		}
+	}
+
+	public void setTableResult(Map<String, Long> map) {
+		Iterator<Entry<String, Long>> iter = map.entrySet().iterator();
+		while (iter.hasNext()) {
+			Entry<String, Long> entry = iter.next();
+			setTableResult(entry.getKey(), entry.getValue());
 		}
 	}
 
@@ -288,18 +234,19 @@ public class ParserDialog extends AbstractFrame
 	 * @param keyword
 	 * @param number
 	 */
-	public void setTableResult(String keyword, Long number)
-	{
+	public void setTableResult(String keyword, Long number) {
+		if (number == null) {
+			return;
+		}
+
 		DefaultTableModel model = (DefaultTableModel) table.getModel();
 		int row = 0;
 
 		@SuppressWarnings("unchecked")
 		Vector<Vector<Object>> dataVector = model.getDataVector();
-		for (Vector<Object> rowVector : dataVector)
-		{
+		for (Vector<Object> rowVector : dataVector) {
 			String firstColumn = (String) rowVector.get(0);
-			if (firstColumn.equals(keyword))
-			{
+			if (firstColumn.equals(keyword)) {
 				break;
 			}
 			row++;
@@ -316,8 +263,7 @@ public class ParserDialog extends AbstractFrame
 	 * 
 	 * @param isPerformingParsing
 	 */
-	public void setIsPerforming(boolean isPerformingParsing)
-	{
+	public void setIsPerforming(boolean isPerformingParsing) {
 		startButton.setEnabled(!isPerformingParsing);
 		clearButton.setEnabled(!isPerformingParsing);
 		exportButton.setEnabled(!isPerformingParsing);
@@ -327,8 +273,7 @@ public class ParserDialog extends AbstractFrame
 	/**
 	 * Clear table content
 	 */
-	public void clearTable()
-	{
+	public void clearTable() {
 		DefaultTableModel model = (DefaultTableModel) table.getModel();
 
 		@SuppressWarnings("unchecked")
@@ -342,17 +287,91 @@ public class ParserDialog extends AbstractFrame
 	 * 
 	 * @return
 	 */
-	public Integer getThreadNumber()
-	{
+	public Integer getThreadNumber() {
 		return (Integer) threadNumberSpinner.getValue();
 	}
 
 	/**
 	 * Open warning window with warning about empty data
 	 */
-	public void showWarningEmptyData()
-	{
+	public void showWarningEmptyData() {
 		JOptionPane.showMessageDialog(this, loc_data.getString("warn_no_data"),
 				loc_data.getString("title"), JOptionPane.INFORMATION_MESSAGE);
 	}
+
+	public void addChooseTxtFileListener(ActionListener actionListener) {
+		chooseFileButton.addActionListener(actionListener);
+	}
+
+	public void addStartParsingListener(ActionListener actionListener) {
+		startButton.addActionListener(actionListener);
+	}
+
+	public void addStopParsingListener(ActionListener actionListener) {
+		stopButton.addActionListener(actionListener);
+	}
+
+	public void addExportListener(ActionListener actionListener) {
+		exportButton.addActionListener(actionListener);
+	}
+
+	public void addClearTableListener(ActionListener actionListener) {
+		clearButton.addActionListener(actionListener);
+	}
+
+	public File openChooseTxtFile() {
+		File file = null;
+
+		final JFileChooser fc = new JFileChooser();
+		fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		int returnVal = fc.showOpenDialog(this);
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
+			file = fc.getSelectedFile();
+		}
+
+		return file;
+	}
+
+	/**
+	 * Choose XLS file to save
+	 * 
+	 * @return
+	 */
+	public File chooseXlsToSave() {
+		File file = null;
+
+		final JFileChooser fc = new JFileChooser();
+		fc.setAcceptAllFileFilterUsed(false);
+		fc.addChoosableFileFilter(new FileFilter() {
+			@Override
+			public boolean accept(File f) {
+				if (f.isDirectory()) {
+					return true;
+				}
+
+				String extension = FilenameUtils.getExtension(f.getName());
+				if (extension != null && extension.equalsIgnoreCase("XLS")) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+
+			@Override
+			public String getDescription() {
+				return "Excel 97-2003 Workbook (*.xls)";
+			}
+		});
+
+		int returnVal = fc.showOpenDialog(null);
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
+			file = fc.getSelectedFile();
+			if (!file.getName().toLowerCase().endsWith(".xls")) {
+				file = new File(file.getAbsolutePath() + ".xls");
+			}
+		}
+
+		return file;
+	}
+
 }
