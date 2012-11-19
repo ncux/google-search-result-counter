@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -180,7 +181,7 @@ public class ParserModel {
 	}
 
 	public Map<String, Long> getResultMap() {
-		return resultMap;
+		return new HashMap<String, Long>(resultMap);
 	}
 
 	public Long getResultMapValue(String keyword) {
@@ -188,7 +189,7 @@ public class ParserModel {
 	}
 
 	public Collection<String> getKeywordsList() {
-		return resultMap.keySet();
+		return new HashSet<String>(resultMap.keySet());
 	}
 
 	public void setThreadNumber(int threadNumber) {
@@ -199,4 +200,7 @@ public class ParserModel {
 		return isPerforming;
 	}
 
+	public void setResultMap(Map<String, Long> map) {
+		resultMap = map;
+	}
 }

@@ -2,14 +2,18 @@ package gsearchparser.mvc;
 
 import gsearchparser.common.window.AbstractFrame;
 
+import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -24,7 +28,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.table.DefaultTableModel;
@@ -40,6 +43,11 @@ import org.apache.commons.io.FilenameUtils;
 public class ParserDialog extends AbstractFrame {
 	private static final long serialVersionUID = 6959318357186149652L;
 
+	private static final int COLUMN_KEYWORD = 0;
+	private static final int COLUMN_RESULT = 1;
+
+	private static DecimalFormat resultFormat = new DecimalFormat("#,###");
+
 	/** visual components */
 	private JPanel mainPanel = null;
 	private JLabel sourceFilePathLabel = null;
@@ -50,6 +58,8 @@ public class ParserDialog extends AbstractFrame {
 	private JButton exportButton = null;
 	private JButton clearButton = null;
 	private JSpinner threadNumberSpinner = null;
+	private JButton addRowButton = null;
+	private JButton removeRowButton = null;
 
 	/**
 	 * Constructor
@@ -138,10 +148,13 @@ public class ParserDialog extends AbstractFrame {
 
 			table = new JTable() {
 				public boolean isCellEditable(int rowIndex, int colIndex) {
-					return false;
+					// reject result changes
+					if (colIndex == COLUMN_RESULT) {
+						return false;
+					}
+					return true;
 				}
 			};
-			table.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
 			DefaultTableModel model = new DefaultTableModel();
 			model.addColumn(loc_data.getString("column_keyword"));
 			model.addColumn(loc_data.getString("column_count"));
@@ -151,12 +164,28 @@ public class ParserDialog extends AbstractFrame {
 			JScrollPane sp = new JScrollPane(table);
 			sp.setPreferredSize(new Dimension(300, 300));
 			sp.setMinimumSize(new Dimension(300, 300));
+
+			JPanel tablePanel = new JPanel(new BorderLayout());
+			tablePanel.add(sp, BorderLayout.NORTH);
+
+			addRowButton = new JButton("+");
+			addRowButton.setMargin(new Insets(0, 0, 0, 0));
+			addRowButton.setPreferredSize(new Dimension(20, 20));
+
+			tablePanel.add(addRowButton, BorderLayout.CENTER);
+
+			removeRowButton = new JButton("-");
+			removeRowButton.setMargin(new Insets(0, 0, 0, 0));
+			removeRowButton.setPreferredSize(new Dimension(20, 20));
+
+			tablePanel.add(removeRowButton, BorderLayout.SOUTH);
+
 			gbc.anchor = GridBagConstraints.CENTER;
 			gbc.weighty = 1;
 			gbc.gridx = 0;
 			gbc.gridy = row++;
 			gbc.gridwidth = GridBagConstraints.REMAINDER;
-			gbl.setConstraints(sp, gbc);
+			gbl.setConstraints(tablePanel, gbc);
 
 			exportButton = new JButton(loc_data.getString("export_button"));
 			gbc.anchor = GridBagConstraints.EAST;
@@ -175,7 +204,7 @@ public class ParserDialog extends AbstractFrame {
 			mainPanel.setLayout(gbl);
 			mainPanel.add(chooseFileButton);
 			mainPanel.add(exportButton);
-			mainPanel.add(sp);
+			mainPanel.add(tablePanel);
 			mainPanel.add(startButton);
 			mainPanel.add(stopButton);
 			mainPanel.add(sourceFilePathLabel);
@@ -214,7 +243,7 @@ public class ParserDialog extends AbstractFrame {
 			boolean isFound = false;
 			for (Vector<Object> rowVector : dataVector) {
 				String firstColumn = (String) rowVector.get(0);
-				if (firstColumn.equals(keyword)) {
+				if (firstColumn != null && firstColumn.equals(keyword)) {
 					isFound = true;
 				}
 			}
@@ -250,14 +279,13 @@ public class ParserDialog extends AbstractFrame {
 		Vector<Vector<Object>> dataVector = model.getDataVector();
 		for (Vector<Object> rowVector : dataVector) {
 			String firstColumn = (String) rowVector.get(0);
-			if (firstColumn.equals(keyword)) {
+			if (firstColumn != null && firstColumn.equals(keyword)) {
 				break;
 			}
 			row++;
 		}
 
-		DecimalFormat df = new DecimalFormat("#,###");
-		String numberFormatted = df.format(number);
+		String numberFormatted = resultFormat.format(number);
 
 		model.setValueAt(numberFormatted, row, 1);
 	}
@@ -323,6 +351,14 @@ public class ParserDialog extends AbstractFrame {
 		clearButton.addActionListener(actionListener);
 	}
 
+	public void addAddRowButtonListener(ActionListener actionListener) {
+		addRowButton.addActionListener(actionListener);
+	}
+
+	public void addRemoveRowButtonListener(ActionListener actionListener) {
+		removeRowButton.addActionListener(actionListener);
+	}
+
 	public File openChooseTxtFile() {
 		File file = null;
 
@@ -378,4 +414,53 @@ public class ParserDialog extends AbstractFrame {
 		return file;
 	}
 
+	public void addRow() {
+		DefaultTableModel model = (DefaultTableModel) table.getModel();
+		model.addRow(new String[] {});
+	}
+
+	public Map<String, Long> getKeywordsForSearch() {
+		Map<String, Long> resultMap = new HashMap<String, Long>();
+
+		DefaultTableModel model = (DefaultTableModel) table.getModel();
+		@SuppressWarnings("unchecked")
+		Vector<Vector<Object>> dataVector = model.getDataVector();
+		for (Vector<Object> rowVector : dataVector) {
+			String keywordColumn = (String) rowVector.get(COLUMN_KEYWORD);
+			if (keywordColumn == null || keywordColumn.isEmpty()) {
+				continue;
+			}
+
+			String resultColumn = (String) rowVector.get(COLUMN_RESULT);
+			Long amount = null;
+			try {
+
+				amount = (Long) resultFormat.parse(resultColumn);
+			} catch (ParseException | NullPointerException e) {
+				// ignore, put null
+			}
+			resultMap.put(keywordColumn, amount);
+		}
+
+		return resultMap;
+	}
+
+	/**
+	 * Remove selected rows from the table
+	 */
+	public void removeSelectedRow() {
+		DefaultTableModel model = (DefaultTableModel) table.getModel();
+		int[] selectedRows = table.getSelectedRows();
+
+		if (selectedRows.length == 0) {
+			if (model.getRowCount() > 0) {
+				model.removeRow(model.getRowCount() - 1); // remove last row
+			}
+		}
+
+		// remove starting from last row
+		for (int i = selectedRows.length - 1; i >= 0; i--) {
+			model.removeRow(selectedRows[i]);
+		}
+	}
 }

@@ -24,6 +24,8 @@ public class ParserController implements ModelSubscriber {
 		view.addStopParsingListener(new StopParsingListener());
 		view.addExportListener(new ExportListener());
 		view.addClearTableListener(new ClearTableListener());
+		view.addAddRowButtonListener(new AddRowButtonListener());
+		view.addRemoveRowButtonListener(new RemoveRowButtonListener());
 	}
 
 	class ChooseTxtFileListener implements ActionListener {
@@ -50,6 +52,7 @@ public class ParserController implements ModelSubscriber {
 			}
 
 			model.setThreadNumber(threadNumber);
+			model.setResultMap(view.getKeywordsForSearch());
 			model.startParsing();
 		}
 	}
@@ -73,6 +76,7 @@ public class ParserController implements ModelSubscriber {
 
 			File openedFile = view.chooseXlsToSave();
 			if (openedFile != null) {
+				model.setResultMap(view.getKeywordsForSearch());
 				model.exportToXls(openedFile);
 			}
 		}
@@ -85,6 +89,20 @@ public class ParserController implements ModelSubscriber {
 			model.clearList();
 			view.clearTable();
 			view.setSourceFilePath(null);
+		}
+	}
+
+	class AddRowButtonListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			view.addRow();
+		}
+	}
+
+	class RemoveRowButtonListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			view.removeSelectedRow();
 		}
 	}
 
