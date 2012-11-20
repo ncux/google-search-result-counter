@@ -5,6 +5,7 @@ import gsearchparser.common.window.AbstractFrame;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -154,10 +155,10 @@ public class ParserDialog extends AbstractFrame {
 					}
 					return true;
 				}
-				
-			    public boolean editCellAt(int row, int column) {
-			        return editCellAt(row, column, null);
-			    }
+
+				public boolean editCellAt(int row, int column) {
+					return editCellAt(row, column, null);
+				}
 
 			};
 			DefaultTableModel model = new DefaultTableModel();
@@ -173,17 +174,22 @@ public class ParserDialog extends AbstractFrame {
 			JPanel tablePanel = new JPanel(new BorderLayout());
 			tablePanel.add(sp, BorderLayout.NORTH);
 
+			JPanel tableButtonPanel = new JPanel(new FlowLayout());
+
 			addRowButton = new JButton("+");
 			addRowButton.setMargin(new Insets(0, 0, 0, 0));
 			addRowButton.setPreferredSize(new Dimension(20, 20));
+			addRowButton.setMinimumSize(new Dimension(20, 20));
 
-			tablePanel.add(addRowButton, BorderLayout.CENTER);
+			tableButtonPanel.add(addRowButton);
 
 			removeRowButton = new JButton("-");
 			removeRowButton.setMargin(new Insets(0, 0, 0, 0));
 			removeRowButton.setPreferredSize(new Dimension(20, 20));
+			removeRowButton.setMinimumSize(new Dimension(20, 20));
 
-			tablePanel.add(removeRowButton, BorderLayout.SOUTH);
+			tableButtonPanel.add(removeRowButton);
+			tablePanel.add(tableButtonPanel, BorderLayout.WEST);
 
 			gbc.anchor = GridBagConstraints.CENTER;
 			gbc.weighty = 1;
