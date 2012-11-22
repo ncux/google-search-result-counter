@@ -1,14 +1,15 @@
 package gsearchparser.mvc;
 
-import gsearchparser.ExcelExportCreator;
 import gsearchparser.GoogleResultCounterParser;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -16,9 +17,12 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.mozilla.universalchardet.UniversalDetector;
+
+import au.com.bytecode.opencsv.CSVWriter;
 
 /**
  * Model for managing view
@@ -113,13 +117,33 @@ public class ParserModel {
 	 * Export data from Map resultMap to *.xls document
 	 */
 	public void exportToXls(File file) {
-		if (file == null) {
-			throw new NullPointerException("Xls file can't be null");
-		}
+		// if (file == null) {
+		// throw new NullPointerException("Xls file can't be null");
+		// }
+		//
+		// ExcelExportCreator excelCreator = new ExcelExportCreator(file,
+		// resultMap);
+		// excelCreator.create();
 
-		ExcelExportCreator excelCreator = new ExcelExportCreator(file,
-				resultMap);
-		excelCreator.create();
+		// csv
+		try {
+			FileOutputStream fos = new FileOutputStream("test.csv");
+			// ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			CSVWriter writer = new CSVWriter(new OutputStreamWriter(fos,
+					"UTF-8"), ',', CSVWriter.DEFAULT_QUOTE_CHARACTER,
+					CSVWriter.NO_ESCAPE_CHARACTER, "\n");
+			for (Entry<String, Long> entry : resultMap.entrySet()) {
+				String theValue = "";
+				if (entry.getValue() != null) {
+					theValue = String.valueOf(entry.getValue());
+				}
+				String[] entries = { entry.getKey().toString(), theValue };
+				writer.writeNext(entries);
+			}
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**

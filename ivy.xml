@@ -6,5 +6,6 @@
         <dependency org="org.jsoup" name="jsoup" rev="1.6.3"/>
         <dependency org="com.googlecode.juniversalchardet" name="juniversalchardet" rev="1.0.3"/>
         <dependency org="net.sourceforge.jexcelapi" name="jxl" rev="2.6.12"/>
+        <dependency org="net.sf.opencsv" name="opencsv" rev="2.3"/>
 	</dependencies>
 </ivy-module>
