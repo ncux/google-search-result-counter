@@ -14,20 +14,17 @@ import javax.swing.WindowConstants;
  * @author SHaurushkin
  */
 @SuppressWarnings("serial")
-public abstract class AbstractFrame extends JFrame
-{
+public abstract class AbstractFrame extends JFrame {
 	/**
 	 * System locale
 	 */
-	private static final Locale LOCALE = new Locale(
-			System.getProperty("user.language"));
+	private static final Locale LOCALE = new Locale("RU");
 	protected ResourceBundle loc_data = null;
 
 	/**
 	 * Constructor
 	 */
-	public AbstractFrame()
-	{
+	public AbstractFrame() {
 		super();
 		loc_data = ResourceBundle.getBundle("resources.loc_data", LOCALE);
 	}
@@ -35,13 +32,10 @@ public abstract class AbstractFrame extends JFrame
 	/**
 	 * Initialize common view options - size, behavior and listeners
 	 */
-	protected void initDialogFrame()
-	{
+	protected void initDialogFrame() {
 		this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		this.addWindowListener(new WindowAdapter()
-		{
-			public void windowClosing(WindowEvent we)
-			{
+		this.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent we) {
 				RestoreMe.storeOptions(AbstractFrame.this);
 				System.exit(0);
 			}

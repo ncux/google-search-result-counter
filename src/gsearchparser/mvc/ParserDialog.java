@@ -30,7 +30,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.NumberFormatter;
 
@@ -198,18 +198,18 @@ public class ParserDialog extends AbstractFrame {
 			gbc.gridwidth = GridBagConstraints.REMAINDER;
 			gbl.setConstraints(tablePanel, gbc);
 
-			exportButton = new JButton(loc_data.getString("export_button"));
-			gbc.anchor = GridBagConstraints.EAST;
+			clearButton = new JButton(loc_data.getString("clear_button"));
+			// gbc.anchor = GridBagConstraints.EAST;
 			gbc.gridx = 0;
 			gbc.gridwidth = 1;
 			gbc.gridy = row;
-			gbl.setConstraints(exportButton, gbc);
-
-			clearButton = new JButton(loc_data.getString("clear_button"));
-			gbc.anchor = GridBagConstraints.WEST;
-			gbc.gridx = 1;
-			gbc.gridy = row;
 			gbl.setConstraints(clearButton, gbc);
+
+			exportButton = new JButton(loc_data.getString("export_button"));
+			// gbc.anchor = GridBagConstraints.WEST;
+			gbc.gridx = 1;
+			gbc.gridy = row++;
+			gbl.setConstraints(exportButton, gbc);
 
 			mainPanel = new JPanel();
 			mainPanel.setLayout(gbl);
@@ -388,37 +388,36 @@ public class ParserDialog extends AbstractFrame {
 	 * 
 	 * @return
 	 */
-	public File chooseXlsToSave() {
+	public File chooseFileToSave() {
 		File file = null;
 
 		final JFileChooser fc = new JFileChooser();
+		fc.setDialogType(JFileChooser.SAVE_DIALOG);
+		fc.setDialogTitle("Save As");
+		fc.setApproveButtonText("Save");
 		fc.setAcceptAllFileFilterUsed(false);
-		fc.addChoosableFileFilter(new FileFilter() {
-			@Override
-			public boolean accept(File f) {
-				if (f.isDirectory()) {
-					return true;
-				}
 
-				String extension = FilenameUtils.getExtension(f.getName());
-				if (extension != null && extension.equalsIgnoreCase("XLS")) {
-					return true;
-				} else {
-					return false;
-				}
-			}
+		FileNameExtensionFilter xlsFileFilter = new FileNameExtensionFilter(
+				"Excel 97-2003 Workbook (*.xls)", "xls");
+		FileNameExtensionFilter csvFileFilter = new FileNameExtensionFilter(
+				"text/csv (*.csv)", "csv");
 
-			@Override
-			public String getDescription() {
-				return "Excel 97-2003 Workbook (*.xls)";
-			}
-		});
+		fc.addChoosableFileFilter(xlsFileFilter);
+		fc.addChoosableFileFilter(csvFileFilter);
 
 		int returnVal = fc.showOpenDialog(null);
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
 			file = fc.getSelectedFile();
-			if (!file.getName().toLowerCase().endsWith(".xls")) {
-				file = new File(file.getAbsolutePath() + ".xls");
+			// check if manual extension was setted
+			String extension = FilenameUtils.getExtension(file.getName());
+			if (extension.isEmpty()
+					|| !(extension.equalsIgnoreCase("xls") || extension
+							.equalsIgnoreCase("csv"))) {
+				if (fc.getFileFilter().equals(xlsFileFilter)) {
+					file = new File(file.getAbsolutePath() + ".xls");
+				} else if (fc.getFileFilter().equals(csvFileFilter)) {
+					file = new File(file.getAbsolutePath() + ".csv");
+				}
 			}
 		}
 

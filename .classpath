@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="lib/commons-io-2.4.jar" sourcepath="lib/commons-io-2.4-src.zip">
+	<classpathentry kind="lib" path="lib/commons-io-2.4.jar" sourcepath="lib/commons-io-2.4-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="jar:platform:/resource/GoogleParser/lib/commons-io-2.4-javadoc.jar!/"/>
 		</attributes>
@@ -25,6 +25,11 @@
 	<classpathentry kind="lib" path="lib/jxl-2.6.12.jar" sourcepath="lib/jxl-2.6.12-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="jar:platform:/resource/GoogleParser/lib/jxl-2.6.12-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="lib/opencsv-2.3.jar" sourcepath="lib/opencsv-2.3-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/GoogleResCountParser/lib/opencsv-2.3-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="output" path="bin"/>

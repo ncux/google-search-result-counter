@@ -61,7 +61,7 @@ public class GoogleResultCounterParser implements Runnable
 						.connect(
 								"http://www.google.ru/search?q="
 										+ keywordForWeb
-										+ "&hl=en&ie=UTF-8&oe=UTF8")
+										+ "&hl=en&ie=UTF-8&oe=UTF8&safe=active")
 						.userAgent(
 								"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)")
 						.get();

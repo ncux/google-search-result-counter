@@ -1,5 +1,6 @@
 package gsearchparser.mvc;
 
+import gsearchparser.ExcelExportCreator;
 import gsearchparser.GoogleResultCounterParser;
 
 import java.io.BufferedReader;
@@ -20,6 +21,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.commons.io.FilenameUtils;
 import org.mozilla.universalchardet.UniversalDetector;
 
 import au.com.bytecode.opencsv.CSVWriter;
@@ -116,18 +118,42 @@ public class ParserModel {
 	/**
 	 * Export data from Map resultMap to *.xls document
 	 */
-	public void exportToXls(File file) {
-		// if (file == null) {
-		// throw new NullPointerException("Xls file can't be null");
-		// }
-		//
-		// ExcelExportCreator excelCreator = new ExcelExportCreator(file,
-		// resultMap);
-		// excelCreator.create();
+	public void export(File file) {
+		if (file == null) {
+			throw new IllegalArgumentException();
+		}
 
-		// csv
+		String extension = FilenameUtils.getExtension(file.getName());
+		if (extension.equalsIgnoreCase("xls")) {
+			exportToXls(file);
+		} else if (extension.equalsIgnoreCase("csv")) {
+			exportToCsv(file);
+		}
+	}
+
+	/**
+	 * Export data from Map resultMap to *.csv document
+	 */
+	private void exportToXls(File file) {
+		if (file == null) {
+			throw new IllegalArgumentException();
+		}
+
+		ExcelExportCreator excelCreator = new ExcelExportCreator(file,
+				resultMap);
+		excelCreator.create();
+	}
+
+	/**
+	 * Export data from Map resultMap to *.csv document
+	 */
+	private void exportToCsv(File file) {
+		if (file == null) {
+			throw new IllegalArgumentException();
+		}
+
 		try {
-			FileOutputStream fos = new FileOutputStream("test.csv");
+			FileOutputStream fos = new FileOutputStream(file);
 			// ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			CSVWriter writer = new CSVWriter(new OutputStreamWriter(fos,
 					"UTF-8"), ',', CSVWriter.DEFAULT_QUOTE_CHARACTER,

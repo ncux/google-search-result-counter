@@ -74,14 +74,14 @@ public class ParserController implements ModelSubscriber {
 				return;
 			}
 
-			File openedFile = view.chooseXlsToSave();
+			File openedFile = view.chooseFileToSave();
 			if (openedFile != null) {
 				model.setResultMap(view.getKeywordsMap());
-				model.exportToXls(openedFile);
+				model.export(openedFile);
 			}
 		}
 	}
-
+	
 	class ClearTableListener implements ActionListener {
 
 		@Override
